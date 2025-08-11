@@ -1,0 +1,77 @@
+# Core model:
+# - stats::glm is built-in; no install needed.
+
+# Helpful add-ons:
+install.packages(c("ggplot2", "broom", "pROC", "caret", "car", "ResourceSelection"))
+
+library(ggplot2)          # Plots (diagnostics & quick EDA)
+library(broom)            # Tidy model outputs (tidy(), augment(), glance())
+library(pROC)             # ROC curve & AUC
+library(caret)            # Train/test split, confusion matrix
+library(car)              # vif() for multicollinearity checks
+library(ResourceSelection) # hoslem.test() for calibration check
+data(mtcars)
+
+df <- mtcars
+df$am <- factor(df$am, levels = c(0, 1), labels = c("auto", "manual"))
+
+# Quick look
+str(df)
+table(df$am)
+
+# Optional: visualize relationships
+ggplot(df, aes(x = hp, y = wt, color = am)) +
+  geom_point(size = 3) +
+  labs(title = "mtcars: hp vs wt colored by transmission")
+set.seed(123)
+idx <- createDataPartition(df$am, p = 0.7, list = FALSE)
+train <- df[idx, ]
+test  <- df[-idx, ]
+# Log-odds(am = manual) ~ hp + wt
+logit_mod <- glm(am ~ hp + wt, data = train, family = binomial)
+
+summary(logit_mod)      # classical summary
+tidy(logit_mod)         # neat table
+glance(logit_mod)       # model-level stats (AIC, etc.)
+coefs <- tidy(logit_mod)
+coefs$odds_ratio <- exp(coefs$estimate)
+coefs
+vif(logit_mod)  # VIF > ~5–10 suggests problematic collinearity
+# Predicted probability of "manual"
+test$prob_manual <- predict(logit_mod, newdata = test, type = "response")
+
+# Classify using a 0.5 threshold (you can tune this later)
+test$pred_class <- ifelse(test$prob_manual >= 0.5, "manual", "auto")
+test$pred_class <- factor(test$pred_class, levels = levels(train$am))
+
+head(test[, c("am", "prob_manual", "pred_class")])
+# Confusion Matrix
+cm <- confusionMatrix(test$pred_class, test$am, positive = "manual")
+cm
+
+# ROC & AUC
+roc_obj <- roc(response = test$am, predictor = test$prob_manual, levels = c("auto", "manual"))
+auc(roc_obj)
+
+# Plot ROC
+plot(roc_obj, main = sprintf("ROC Curve (AUC = %.3f)", auc(roc_obj)))
+# Needs numeric outcome (0/1)
+train$am_num <- as.numeric(train$am == "manual")
+hl <- hoslem.test(train$am_num, fitted(logit_mod), g = 10)  # g = number of groups/deciles
+hl
+# Example: choose threshold that maximizes Youden’s J (sensitivity + specificity - 1)
+coords_best <- coords(roc_obj, "best", ret = c("threshold", "sensitivity", "specificity"))
+coords_best
+
+best_t <- coords_best["threshold"]
+
+test$pred_best <- ifelse(test$prob_manual >= best_t, "manual", "auto")
+test$pred_best <- factor(test$pred_best, levels = levels(test$am))
+confusionMatrix(test$pred_best, test$am, positive = "manual")
+# Add an interaction term
+logit_int <- glm(am ~ hp * wt, data = train, family = binomial)
+anova(logit_mod, logit_int, test = "Chisq")  # does interaction improve fit?
+
+# Add a simple nonlinearity (e.g., quadratic in hp)
+logit_quad <- glm(am ~ poly(hp, 2) + wt, data = train, family = binomial)
+anova(logit_mod, logit_quad, test = "Chisq")
