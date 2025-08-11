@@ -1,0 +1,43 @@
+install.packages(c("car", "ggplot2", "dplyr", "broom"))
+library(car)      # multivariate tests: Anova(), linearHypothesis()
+library(ggplot2)  # visualization
+library(dplyr)    # data manipulation
+library(broom)    # tidy results
+data(iris)
+head(iris)
+# MANOVA: multiple dependent variables (cbind)
+manova_mod <- manova(cbind(Sepal.Length, Sepal.Width) ~ Species, data = iris)
+
+# Summary with Pillai’s trace (robust choice)
+summary(manova_mod, test = "Pillai")
+
+# Other options: "Wilks", "Hotelling-Lawley", "Roy"
+summary(manova_mod, test = "Wilks")
+summary.aov(manova_mod)
+car::Anova(lm(cbind(Sepal.Length, Sepal.Width) ~ Species, data = iris),
+           test.statistic = "Pillai")  # or "Wilks"
+install.packages("biotools")
+library(biotools)
+boxM(cbind(Sepal.Length, Sepal.Wi# Fit linear model
+fit_lm <- lm(cbind(Sepal.Length, Sepal.Width) ~ Species, data = iris)
+
+# Canonical plot
+candisc::candisc(fit_lm) %>% plot()
+dth) ~ Species, data = iris)
+# MANOVA example with iris
+library(car)
+library(biotools)
+
+# MANOVA model
+manova_mod <- manova(cbind(Sepal.Length, Sepal.Width) ~ Species, data = iris)
+summary(manova_mod, test = "Pillai")
+
+# Post-hoc univariate ANOVAs
+summary.aov(manova_mod)
+
+# Type II MANOVA
+Anova(lm(cbind(Sepal.Length, Sepal.Width) ~ Species, data = iris),
+      test.statistic = "Pillai")
+
+# Box's M test
+boxM(cbind(Sepal.Length, Sepal.Width) ~ Species, data = iris)
