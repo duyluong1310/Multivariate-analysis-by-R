@@ -51,17 +51,17 @@ jobs:
           layout: default
           ---
           # Multivariate Analysis by R
-          Select a method from the menu.
+          Welcome! Click a method below.
           MD
           fi
 
-      - name: Render ALL .Rmd into docs/
+      - name: Render ALL .Rmd (at repo root) into docs/
         run: |
           Rscript -e '
             dir.create("docs", showWarnings = FALSE)
-            rmds <- list.files(pattern = "\\\\.Rmd$", ignore.case = TRUE)
-            if (length(rmds) == 0) { message("No .Rmd files found."); quit(status=0) }
-            for (f in rmds) {
+            rmd_files <- list.files(".", pattern = "\\\\.Rmd$", full.names = TRUE)
+            if (length(rmd_files) == 0) stop("No .Rmd files found in repo root")
+            for (f in rmd_files) {
               out <- file.path("docs", paste0(tools::file_path_sans_ext(basename(f)), ".html"))
               message("Rendering: ", f, " -> ", out)
               tryCatch(
@@ -79,7 +79,7 @@ jobs:
       - name: Show docs/
         run: ls -lah docs || true
 
-      # >>> Force-add docs/ even if .gitignore ignores it <<<
+      # Force-add phòng trường hợp còn rule ignore nào sót
       - name: Commit docs/
         run: |
           git config user.name "${{ github.actor }}"
