@@ -1,0 +1,22 @@
+project:
+  type: website
+  output-dir: docs   # Xuất site vào thư mục docs
+
+website:
+  title: "Multivariate Analysis by R"
+  navbar:
+    left:
+      - text: Home
+        file: index.qmd
+      - text: CCA
+        file: cca.qmd
+  page-footer:
+    center: "© 2025 Your Name"
+
+format:
+  html:
+    theme: cosmo
+    toc: true
+    code-copy: true
+    code-fold: show
+    number-sections: true
