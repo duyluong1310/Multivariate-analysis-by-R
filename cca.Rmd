@@ -1,0 +1,18 @@
+
+---
+
+### 5. `cca.Rmd`
+```markdown
+---
+title: "Canonical Correlation Analysis (CCA)"
+output:
+  prettydoc::html_pretty:
+    theme: cayman
+    highlight: github
+---
+
+```{r}
+X <- as.matrix(mtcars[, c("disp","hp","drat")])
+Y <- as.matrix(mtcars[, c("qsec","mpg")])
+cc <- cancor(X, Y)
+cc$cor
