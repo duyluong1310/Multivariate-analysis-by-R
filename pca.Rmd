@@ -1,0 +1,17 @@
+
+---
+
+### 6. `pca.Rmd`
+```markdown
+---
+title: "Principal Component Analysis (PCA)"
+output:
+  prettydoc::html_pretty:
+    theme: cayman
+    highlight: github
+---
+
+```{r}
+p <- prcomp(USArrests, scale.=TRUE)
+summary(p)
+head(p$x)
