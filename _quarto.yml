@@ -1,6 +1,6 @@
 project:
   type: website
-  output-dir: docs   # Xuất site vào thư mục docs
+  output-dir: docs
 
 website:
   title: "Multivariate Analysis by R"
@@ -8,8 +8,32 @@ website:
     left:
       - text: Home
         file: index.qmd
-      - text: CCA
-        file: cca.qmd
+      - text: Methods
+        menu:
+          - text: "Canonical Correlation Analysis (CCA)"
+            file: cca.qmd
+          - text: "Cluster Analysis"
+            file: cluster.qmd
+          - text: "Discriminant Analysis"
+            file: discriminant.qmd
+          - text: "Factor Analysis of Mixed Data (FAMD)"
+            file: famd.qmd
+          - text: "Logistic Regression"
+            file: logistic.qmd
+          - text: "Multidimensional Scaling (MDS)"
+            file: mds.qmd
+          - text: "Multinomial / Ordinal Logistic Regression"
+            file: multinomial.qmd
+          - text: "Multiple Regression"
+            file: multiple_regression.qmd
+          - text: "Multivariate Analysis of Variance (MANOVA)"
+            file: manova.qmd
+          - text: "Principal Component Analysis (PCA)"
+            file: pca.qmd
+          - text: "Random Forest / Gradient Boosting"
+            file: random_forest.qmd
+          - text: "Support Vector Machines (SVM)"
+            file: svm.qmd
   page-footer:
     center: "© 2025 Your Name"
 
@@ -19,4 +43,3 @@ format:
     toc: true
     code-copy: true
     code-fold: show
-    number-sections: true
