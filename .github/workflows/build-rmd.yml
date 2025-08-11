@@ -1,52 +1,92 @@
-# History files
-.Rhistory
-.Rapp.history
+name: Render Rmd to docs (branch deploy)
 
-# Session Data files
-.RData
-.RDataTmp
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
 
-# User-specific files
-.Ruserdata
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
 
-# Example code in package build process
-*-Ex.R
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
 
-# Output files from R CMD build
-/*.tar.gz
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          use-public-rspm: true
 
-# Output files from R CMD check
-/*.Rcheck/
+      - uses: r-lib/actions/setup-pandoc@v2
 
-# RStudio files
-.Rproj.user/
+      - name: Install R packages
+        run: |
+          Rscript -e 'install.packages(c(
+            "rmarkdown","knitr","prettydoc",
+            "MASS","FactoMineR","factoextra",
+            "nnet","e1071",
+            "tidymodels","ranger"
+          ))'
 
-# produced vignettes
-vignettes/*.html
-vignettes/*.pdf
+      - name: Ensure docs/ + theme
+        shell: bash
+        run: |
+          mkdir -p docs
+          if [ ! -f docs/_config.yml ]; then
+            cat > docs/_config.yml <<'YAML'
+          title: Multivariate Analysis by R
+          description: Showcase of multivariate methods generated from R notebooks
+          remote_theme: pages-themes/cayman@v0.2.0
+          plugins:
+            - jekyll-remote-theme
+          markdown: kramdown
+          YAML
+          fi
 
-# OAuth2 token, see https://github.com/hadley/httr/releases/tag/v0.3
-.httr-oauth
+      - name: Render ALL .Rmd at repo root into docs/
+        run: |
+          Rscript -e '
+            rmds <- list.files(".", pattern = "\\\\.[Rr]md$", full.names = TRUE)
+            if (length(rmds) == 0) stop("No .Rmd files found in repo root")
+            dir.create("docs", showWarnings = FALSE)
+            for (f in rmds) {
+              out <- file.path("docs", paste0(tools::file_path_sans_ext(basename(f)), ".html"))
+              message("Rendering: ", f, " -> ", out)
+              rmarkdown::render(
+                f,
+                output_format = "prettydoc::html_pretty",
+                output_file   = out,
+                envir = new.env()
+              )
+            }
+          '
 
-# knitr and R markdown default cache directories
-*_cache/
-/cache/
+      - name: Auto-generate docs/index.md (menu)
+        run: |
+          Rscript -e '
+            htmls <- list.files("docs", pattern="\\.html$", full.names=FALSE)
+            if (length(htmls) == 0) quit(status=0)
+            titleize <- function(x) tools::toTitleCase(gsub("_", " ", tools::file_path_sans_ext(x)))
+            con <- file("docs/index.md", "w")
+            writeLines(c(
+              "---","layout: default","---",
+              "# Multivariate Analysis by R",
+              "",
+              "Welcome to the showcase. Click a method below:",
+              ""
+            ), con)
+            writeLines("## Methods", con)
+            for (f in sort(htmls)) writeLines(paste0("- [", titleize(f), "](", f, ")"), con)
+            close(con)
+          '
 
-# Temporary files created by R markdown
-*.utf8.md
-*.knit.md
-
-# R Environment Variables
-.Renviron
-
-# pkgdown site
-docs/
-
-# translation temp files
-po/*~
-
-# RStudio Connect folder
-rsconnect/
-
-# 🚫 Không chặn file .Rmd
-# (Xoá hoặc comment các rule có *.Rmd nếu trước đây từng có)
+      - name: Commit docs/ (force-add in case of .gitignore)
+        run: |
+          git config user.name "${{ github.actor }}"
+          git config user.email "${{ github.actor }}@users.noreply.github.com"
+          git add -f docs
+          git diff --cached --quiet || git commit -m "Update docs (render Rmd)"
+          git push
