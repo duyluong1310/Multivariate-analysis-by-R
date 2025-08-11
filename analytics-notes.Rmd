@@ -11,3 +11,53 @@ output:
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(comment = "#>", dpi = 96, fig.retina = 2, message = FALSE, warning = FALSE)
+X <- as.matrix(mtcars[, c("disp","hp","drat")])
+Y <- as.matrix(mtcars[, c("qsec","mpg")])
+cca_fit <- cancor(X, Y)
+cca_fit$cor
+dat <- scale(USArrests)
+set.seed(1)
+km <- kmeans(dat, centers = 4, nstart = 25)
+km$size
+library(MASS)
+fit_lda <- lda(Species ~ ., data = iris)
+pred <- predict(fit_lda)$class
+mean(pred == iris$Species)
+library(FactoMineR)
+res <- FAMD(iris, graph = FALSE)
+res$eig[1:5,]
+fit_glm <- glm(am ~ mpg + wt + hp, data = mtcars, family = binomial)
+summary(fit_glm)
+D <- dist(scale(USArrests))
+cmdscale(D, k = 2)
+library(nnet)
+fit_multi <- multinom(Species ~ Sepal.Length + Petal.Length, data = iris, trace = FALSE)
+summary(fit_multi)
+fit_lm <- lm(mpg ~ wt + hp + drat, data = mtcars)
+summary(fit_lm)
+fit_mv <- manova(cbind(Sepal.Length, Sepal.Width, Petal.Length, Petal.Width) ~ Species, data = iris)
+summary(fit_mv, test = "Pillai")
+pca <- prcomp(USArrests, scale. = TRUE)
+summary(pca)
+library(tidymodels)
+set.seed(42)
+iris_split <- initial_split(iris, strata = Species)
+iris_train <- training(iris_split)
+iris_test  <- testing(iris_split)
+
+rf_spec <- rand_forest(mtry = 2, trees = 500, min_n = 3) %>%
+  set_engine("ranger") %>%
+  set_mode("classification")
+
+rf_wf <- workflow() %>%
+  add_model(rf_spec) %>%
+  add_formula(Species ~ .)
+
+rf_fit <- fit(rf_wf, iris_train)
+rf_fit %>%
+  predict(iris_test) %>%
+  bind_cols(iris_test) %>%
+  metrics(truth = Species, estimate = .pred_class)
+library(e1071)
+svm_fit <- svm(Species ~ ., data = iris, kernel = "radial", cost = 1, gamma = 0.1)
+mean(predict(svm_fit, iris) == iris$Species)
