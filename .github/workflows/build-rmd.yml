@@ -22,7 +22,7 @@ jobs:
 
       - uses: r-lib/actions/setup-pandoc@v2
 
-      - name: Install R packages (minimal, stable)
+      - name: Install R packages (for 12 notebooks)
         run: |
           Rscript -e 'install.packages(c(
             "rmarkdown","knitr","prettydoc",
@@ -31,7 +31,7 @@ jobs:
             "tidymodels","ranger"
           ))'
 
-      - name: Ensure docs/ + theme + landing (if missing)
+      - name: Ensure docs/ + theme + landing (optional)
         shell: bash
         run: |
           mkdir -p docs
@@ -51,7 +51,7 @@ jobs:
           layout: default
           ---
           # Multivariate Analysis by R
-          Welcome! Choose a method from the list below.
+          Select a method from the menu.
           MD
           fi
 
@@ -59,13 +59,14 @@ jobs:
         run: |
           Rscript -e '
             dir.create("docs", showWarnings = FALSE)
-            rmds <- list.files(pattern="\\.Rmd$", ignore.case=TRUE)
-            if (length(rmds) == 0) { message("No .Rmd files found at repo root."); quit(status=0) }
+            rmds <- list.files(pattern = "\\\\.Rmd$", ignore.case = TRUE)
+            if (length(rmds) == 0) { message("No .Rmd files found."); quit(status=0) }
             for (f in rmds) {
-              out <- file.path("docs", sub("\\\\.Rmd$", ".html", f, ignore.case=TRUE))
+              out <- file.path("docs", paste0(tools::file_path_sans_ext(basename(f)), ".html"))
               message("Rendering: ", f, " -> ", out)
               tryCatch(
-                rmarkdown::render(f,
+                rmarkdown::render(
+                  f,
                   output_format = "prettydoc::html_pretty",
                   output_file   = out,
                   envir = new.env()
@@ -75,7 +76,7 @@ jobs:
             }
           '
 
-      - name: List docs/
+      - name: Show docs/
         run: ls -lah docs || true
 
       - name: Commit docs/
