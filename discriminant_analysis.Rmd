@@ -1,0 +1,17 @@
+
+---
+
+### 12. `discriminant_analysis.Rmd`
+```markdown
+---
+title: "Discriminant Analysis"
+output:
+  prettydoc::html_pretty:
+    theme: cayman
+    highlight: github
+---
+
+```{r}
+library(MASS)
+lda_fit <- lda(Species ~ ., data=iris)
+mean(predict(lda_fit)$class == iris$Species)
