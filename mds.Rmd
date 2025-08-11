@@ -1,0 +1,16 @@
+
+---
+
+### 9. `mds.Rmd`
+```markdown
+---
+title: "Multidimensional Scaling (MDS)"
+output:
+  prettydoc::html_pretty:
+    theme: cayman
+    highlight: github
+---
+
+```{r}
+D <- dist(scale(USArrests))
+cmdscale(D, k=2)
