@@ -4,176 +4,90 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Multivariate Analysis by R</title>
-
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
-
 <style>
-  :root{
-    --bg:#f6f8fb;
-    --panel:#ffffff;
-    --text:#1b2430;
-    --muted:#64748b;
-    --brand:#0e7c86;
-    --brand-2:#0aa3a3;
-    --border:#e6e8ef;
-    --radius:16px;
-    --shadow:0 14px 30px rgba(2,6,23,.08);
-  }
-  *{box-sizing:border-box}
-  html,body{height:100%}
-  body{
-    margin:0;background:var(--bg);color:var(--text);
-    font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
-  }
-  /* HERO */
-  .hero{
-    background:linear-gradient(180deg,#0f8e96 0%, #0e7c86 100%);
-    color:#fff;padding:56px 20px 42px;border-bottom:6px solid #0aa3a3;
-  }
-  .wrap{max-width:1100px;margin:0 auto}
-  .hero h1{margin:0 0 10px 0;font-size:38px;letter-spacing:.2px}
-  .hero p{margin:0;opacity:.95;max-width:820px;font-size:18px}
-  /* FILTER BAR */
-  .filters{
-    margin-top:-26px;
-    background:var(--panel);border:1px solid var(--border);box-shadow:var(--shadow);
-    border-radius:var(--radius);padding:14px;display:flex;flex-wrap:wrap;gap:10px;align-items:center;
-  }
-  .pill{
-    padding:8px 12px;border:1px solid var(--border);border-radius:999px;cursor:pointer;
-    background:#fff;color:var(--text);font-weight:600;font-size:14px;
-  }
+  :root{--bg:#f6f8fb;--panel:#fff;--text:#1b2430;--muted:#64748b;--brand:#0e7c86;--border:#e6e8ef;--radius:16px;--shadow:0 14px 30px rgba(2,6,23,.08)}
+  *{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+  .hero{background:linear-gradient(180deg,#0f8e96 0%, #0e7c86 100%);color:#fff;padding:56px 20px 42px;border-bottom:6px solid #0aa3a3}
+  .wrap{max-width:1100px;margin:0 auto} .hero h1{margin:0 0 10px 0;font-size:38px} .hero p{margin:0;opacity:.95;max-width:820px;font-size:18px}
+  .filters{margin-top:-26px;background:#fff;border:1px solid var(--border);box-shadow:var(--shadow);border-radius:var(--radius);padding:14px;display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+  .pill{padding:8px 12px;border:1px solid var(--border);border-radius:999px;cursor:pointer;background:#fff;color:var(--text);font-weight:600;font-size:14px}
   .pill.active{background:var(--brand);color:#fff;border-color:transparent}
   .search{margin-left:auto;min-width:220px;flex:1;display:flex;justify-content:flex-end}
-  .search input{
-    width:100%;max-width:260px;padding:10px 12px;border-radius:12px;border:1px solid var(--border);
-    background:#fff;color:var(--text);outline:none;
-  }
-  /* GRID */
+  .search input{width:100%;max-width:260px;padding:10px 12px;border-radius:12px;border:1px solid var(--border);background:#fff;color:var(--text)}
   .section{padding:26px 20px 46px}
-  .grid{
-    display:grid;grid-template-columns:repeat(3,1fr);gap:18px;max-width:1100px;margin:0 auto;
-  }
-  @media (max-width: 992px){ .grid{grid-template-columns:repeat(2,1fr)} }
-  @media (max-width: 640px){ .grid{grid-template-columns:1fr} .search{margin-left:0} }
-  .card{
-    background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:16px;
-    box-shadow:var(--shadow);display:flex;flex-direction:column;gap:10px;
-    transition:transform .08s ease, box-shadow .12s ease;
-  }
-  .card:hover{transform:translateY(-2px)}
-  .badge{display:inline-block;background:#e9fbfb;color:#086d73;border:1px solid #baf0f0;padding:4px 8px;border-radius:999px;font-size:12px;font-weight:700}
-  .title{font-weight:700;font-size:18px;margin:0}
-  .desc{color:var(--muted);font-size:14px;margin:0}
-  .cta{margin-top:auto}
-  .btn{
-    display:block;
-    width:100%;
-    text-align:center;
-    padding:10px 12px;border-radius:12px;border:1px solid var(--border);
-    background:var(--brand);color:#fff;
-    cursor:pointer;text-decoration:none;font-weight:700;
-  }
+  .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;max-width:1100px;margin:0 auto}
+  @media (max-width: 992px){ .grid{grid-template-columns:repeat(2,1fr)} } @media (max-width: 640px){ .grid{grid-template-columns:1fr} .search{margin-left:0} }
+  .card{background:#fff;border:1px solid var(--border);border-radius:14px;padding:16px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:10px;transition:transform .08s}
+  .card:hover{transform:translateY(-2px)} .badge{display:inline-block;background:#e9fbfb;color:#086d73;border:1px solid #baf0f0;padding:4px 8px;border-radius:999px;font-size:12px;font-weight:700}
+  .title{font-weight:700;font-size:18px;margin:0} .desc{color:var(--muted);font-size:14px;margin:0}
+  .cta{margin-top:auto} .btn{display:block;width:100%;text-align:center;padding:10px 12px;border-radius:12px;border:1px solid var(--border);background:var(--brand);color:#fff;text-decoration:none;font-weight:700}
   footer{padding:28px 20px;color:var(--muted);text-align:center}
 </style>
 </head>
 <body>
+  <div class="hero"><div class="wrap">
+    <h1>Multivariate Analysis by R</h1>
+    <p>Showcase các phương pháp phân tích đa biến bằng R. Chọn danh mục hoặc tìm kiếm để mở trang <em>lý thuyết</em> của từng phương pháp.</p>
+  </div></div>
 
-  <!-- HERO -->
-  <div class="hero">
-    <div class="wrap">
-      <h1>Multivariate Analysis by R</h1>
-      <p>Showcase các phương pháp phân tích đa biến bằng R. Chọn danh mục hoặc tìm kiếm để xem bài và mã nguồn đã biên dịch sẵn trên GitHub Pages.</p>
-    </div>
-  </div>
-
-  <!-- FILTERS -->
   <div class="wrap">
     <div class="filters">
       <span class="pill active" data-cat="all">All</span>
       <span class="pill" data-cat="dependence">Dependence</span>
       <span class="pill" data-cat="interdependence">Interdependence</span>
       <span class="pill" data-cat="classification">Classification</span>
-
-      <div class="search">
-        <input id="q" type="search" placeholder="Search: regression, PCA, SVM…" />
-      </div>
+      <div class="search"><input id="q" type="search" placeholder="Search: regression, PCA, SVM…"></div>
     </div>
   </div>
 
-  <!-- GRID -->
-  <section class="section">
-    <div id="grid" class="grid"></div>
-  </section>
-
-  <footer>© <span id="y"></span> R-Studio showcase · Theme inspired by clean career listings.</footer>
+  <section class="section"><div id="grid" class="grid"></div></section>
+  <footer>© <span id="y"></span> R‑Studio showcase</footer>
 
 <script>
-  // ===== DATA =====
+  // Danh sách trang lý thuyết (đi tới docs/methods/<slug>.html)
   const items = [
-    {title:"Multiple Regression", cat:"dependence", file:"R for Multiple Regression.R", desc:"OLS, kiểm định giả định, chẩn đoán mô hình."},
-    {title:"Logistic Regression", cat:"dependence", file:"R for Logistic Regression.R", desc:"Phân loại nhị phân, ROC/AUC, odds ratio."},
-    {title:"Multinomial / Ordinal Logistic Regression", cat:"dependence", file:"R for Multinomial or Ordinal Logistic Regression.R", desc:"Nhiều lớp / thứ bậc."},
-    {title:"MANOVA", cat:"dependence", file:"R for Multivariate Analysis of Variance (MANOVA).R", desc:"So sánh đa biến giữa nhóm."},
-    {title:"Canonical Correlation Analysis (CCA)", cat:"dependence", file:"R for Canonical Corelation Analysis (CCA).R", desc:"Tương quan chuẩn tắc giữa hai tập biến."},
+    {title:"Multiple Regression",   cat:"dependence",     page:"methods/multiple-regression.html",   desc:"OLS, giả định, chẩn đoán mô hình."},
+    {title:"Logistic Regression",   cat:"dependence",     page:"methods/logistic-regression.html",   desc:"Phân loại nhị phân, ROC/AUC, odds ratio."},
+    {title:"Multinomial / Ordinal Logistic Regression", cat:"dependence", page:"methods/ordinal-logit.html", desc:"Nhiều lớp / thứ bậc."},
+    {title:"MANOVA",                cat:"dependence",     page:"methods/manova.html",                 desc:"So sánh đa biến giữa nhóm."},
+    {title:"Canonical Correlation Analysis (CCA)", cat:"dependence", page:"methods/cca.html",          desc:"Tương quan chuẩn tắc hai tập biến."},
 
-    {title:"Principal Component Analysis (PCA)", cat:"interdependence", file:"R for Principle Compenent Analysis (PCA).R", desc:"Giảm chiều, trực quan hoá."},
-    {title:"Factor Analysis of Mixed Data (FAMD)", cat:"interdependence", file:"R for Factor Analysis of Mixed Data (FAMD).R", desc:"Dữ liệu hỗn hợp định tính/định lượng."},
-    {title:"Cluster Analysis", cat:"interdependence", file:"R for Cluster Analysis.R", desc:"K-means, hierarchical, silhouette."},
-    {title:"Multidimensional Scaling (MDS)", cat:"interdependence", file:"R for Multidimensional Scaling (MDS).R", desc:"Bản đồ khoảng cách, stress."},
+    {title:"Principal Component Analysis (PCA)", cat:"interdependence", page:"methods/pca.html",       desc:"Giảm chiều, trực quan hoá."},
+    {title:"Factor Analysis of Mixed Data (FAMD)", cat:"interdependence", page:"methods/famd.html",    desc:"Dữ liệu hỗn hợp định tính/định lượng."},
+    {title:"Cluster Analysis",       cat:"interdependence", page:"methods/cluster.html",               desc:"K‑means, hierarchical, silhouette."},
+    {title:"Multidimensional Scaling (MDS)", cat:"interdependence", page:"methods/mds.html",           desc:"Bản đồ khoảng cách, stress."},
 
-    {title:"Support Vector Machines (SVM)", cat:"classification", file:"R for Support Vector Machines (SVM).R", desc:"Kernel, hyperparameters, margin."},
-    {title:"Random Forest / Gradient Boosting", cat:"classification", file:"R for Random Forest or Gradient Boosting.R", desc:"Bagging, boosting, importance."},
-    {title:"Discriminant Analysis", cat:"classification", file:"R for Discriminant Analysis.R", desc:"LDA/QDA, giả định và đánh giá."}
+    {title:"Support Vector Machines (SVM)", cat:"classification", page:"methods/svm.html",             desc:"Kernel, margin, C/γ."},
+    {title:"Random Forest / Gradient Boosting", cat:"classification", page:"methods/rf-gb.html",       desc:"Bagging, boosting, importance."},
+    {title:"Discriminant Analysis",  cat:"classification", page:"methods/discriminant.html",           desc:"LDA/QDA, giả định & đánh giá."}
   ];
 
-  const grid = document.getElementById('grid');
-  const q = document.getElementById('q');
-  const year = document.getElementById('y');
+  const grid=document.getElementById('grid'), q=document.getElementById('q'), year=document.getElementById('y');
 
   function cardHTML(x){
-    const tag = (x.cat==='dependence')? 'Dependence' :
-                (x.cat==='interdependence')? 'Interdependence' :
-                'Classification';
+    const tag=(x.cat==='dependence')?'Dependence':(x.cat==='interdependence')?'Interdependence':'Classification';
     return `
       <article class="card" data-cat="${x.cat}" data-title="${x.title.toLowerCase()}">
         <span class="badge">${tag}</span>
         <h3 class="title">${x.title}</h3>
-        <p class="desc">${x.desc || ""}</p>
-        <div class="cta">
-          <a class="btn" href="viewer.html?file=${encodeURIComponent(x.file)}">Open</a>
-        </div>
-      </article>
-    `;
+        <p class="desc">${x.desc||""}</p>
+        <div class="cta"><a class="btn" href="${x.page}">Open</a></div>
+      </article>`;
   }
-
-  function render(list){ grid.innerHTML = list.map(cardHTML).join(""); }
+  function render(list){ grid.innerHTML=list.map(cardHTML).join(""); }
   render(items);
 
-  // Filter pills
-  document.querySelectorAll('.pill').forEach(p=>{
-    p.addEventListener('click', ()=>{
-      document.querySelectorAll('.pill').forEach(x=>x.classList.remove('active'));
-      p.classList.add('active');
-      applyFilters();
-    });
-  });
-
-  // Search
-  q.addEventListener('input', applyFilters);
+  document.querySelectorAll('.pill').forEach(p=>p.addEventListener('click',()=>{
+    document.querySelectorAll('.pill').forEach(x=>x.classList.remove('active')); p.classList.add('active'); applyFilters();
+  }));
+  q.addEventListener('input',applyFilters);
 
   function applyFilters(){
-    const active = document.querySelector('.pill.active').dataset.cat;
-    const term = q.value.trim().toLowerCase();
-    const filtered = items.filter(x=>{
-      const byCat = (active==='all')? true : x.cat===active;
-      const byText = !term || x.title.toLowerCase().includes(term);
-      return byCat && byText;
-    });
-    render(filtered);
+    const active=document.querySelector('.pill.active').dataset.cat, term=q.value.trim().toLowerCase();
+    render(items.filter(x=> (active==='all'||x.cat===active) && (!term||x.title.toLowerCase().includes(term)) ));
   }
-
-  year.textContent = new Date().getFullYear();
+  year.textContent=new Date().getFullYear();
 </script>
 </body>
 </html>
