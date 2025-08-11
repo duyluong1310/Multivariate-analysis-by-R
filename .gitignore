@@ -40,7 +40,8 @@ vignettes/*.pdf
 .Renviron
 
 # pkgdown site
-docs/
+# (KHÔNG ignore docs/ vì ta dùng docs/ cho GitHub Pages)
+# docs/
 
 # translation temp files
 po/*~
