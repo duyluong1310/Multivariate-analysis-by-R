@@ -1,0 +1,17 @@
+
+---
+
+### 3. `multinomial_ordinal_logistic_regression.Rmd`
+```markdown
+---
+title: "Multinomial / Ordinal Logistic Regression"
+output:
+  prettydoc::html_pretty:
+    theme: cayman
+    highlight: github
+---
+
+```{r}
+library(nnet)
+multi <- multinom(Species ~ Sepal.Length + Petal.Length, data = iris, trace = FALSE)
+summary(multi)
