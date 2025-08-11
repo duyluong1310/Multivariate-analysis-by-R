@@ -1,0 +1,58 @@
+install.packages(c("nnet", "MASS", "broom", "car", "ggplot2"))
+library(nnet)     # multinom()
+library(MASS)     # polr()
+library(broom)    # tidy tables
+library(car)      # vif
+library(ggplot2)  # plotting
+# Example: predict gear (3, 4, 5) from hp & wt in mtcars
+data(mtcars)
+df <- mtcars
+df$gear <- factor(df$gear)  # Nominal outcome
+# Fit multinomial logistic regression
+multi_mod <- multinom(gear ~ hp + wt, data = df)
+
+# Summary
+summary(multi_mod)
+
+# p-values (Wald z-test)
+z <- summary(multi_mod)$coefficients / summary(multi_mod)$standard.errors
+p_values <- 2 * (1 - pnorm(abs(z)))
+p_values
+
+# Odds ratios
+odds_ratios <- exp(coef(multi_mod))
+odds_ratios
+vif(multi_mod)
+# Predicted class
+pred_class <- predict(multi_mod, newdata = df, type = "class")
+
+# Predicted probabilities
+pred_probs <- predict(multi_mod, newdata = df, type = "probs")
+head(pred_probs)
+# Create ordered factor: mpg_level = Low < Medium < High
+df$mpg_level <- cut(df$mpg,
+                    breaks = quantile(df$mpg, probs = c(0, 0.33, 0.66, 1)),
+                    labels = c("Low", "Medium", "High"),
+                    include.lowest = TRUE,
+                    ordered_result = TRUE)
+# Fit ordinal logistic regression
+ord_mod <- polr(mpg_level ~ hp + wt, data = df, Hess = TRUE)
+
+# Summary
+summary(ord_mod)
+
+# p-values
+(ctable <- coef(summary(ord_mod)))
+p_val <- pnorm(abs(ctable[, "t value"]), lower.tail = FALSE) * 2
+p_val
+
+# Odds ratios
+exp(coef(ord_mod))
+# Predict class
+ord_pred_class <- predict(ord_mod, newdata = df, type = "class")
+
+# Predict probabilities
+ord_pred_probs <- predict(ord_mod, newdata = df, type = "probs")
+head(ord_pred_probs)
+table(Predicted = pred_class, Actual = df$gear)  # multinomial case
+table(Predicted = ord_pred_class, Actual = df$mpg_level)  # ordinal case
