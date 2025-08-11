@@ -1,0 +1,18 @@
+
+---
+
+### 8. `cluster_analysis.Rmd`
+```markdown
+---
+title: "Cluster Analysis"
+output:
+  prettydoc::html_pretty:
+    theme: cayman
+    highlight: github
+---
+
+```{r}
+set.seed(1)
+dat <- scale(USArrests)
+km <- kmeans(dat, centers=4, nstart=25)
+km$size
