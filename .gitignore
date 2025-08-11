@@ -40,11 +40,13 @@ vignettes/*.pdf
 .Renviron
 
 # pkgdown site
-# (KHÔNG ignore docs/ vì ta dùng docs/ cho GitHub Pages)
-# docs/
+docs/
 
 # translation temp files
 po/*~
 
 # RStudio Connect folder
 rsconnect/
+
+# 🚫 Không chặn file .Rmd
+# (Xoá hoặc comment các rule có *.Rmd nếu trước đây từng có)
