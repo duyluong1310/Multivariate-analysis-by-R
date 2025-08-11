@@ -1,0 +1,37 @@
+---
+title: "Canonical Correlation Analysis (CCA)"
+format:
+  html:
+    code-fold: show
+    code-copy: true
+---
+
+## Overview
+This notebook demonstrates **Canonical Correlation Analysis (CCA)** using the built-in `mtcars` dataset.  
+CCA explores the relationships between two sets of variables.
+
+We will:
+1. Load required libraries.
+2. Fit a CCA model.
+3. Examine canonical correlations and loadings.
+4. Perform significance testing (Wilks' Lambda).
+5. Visualize the first canonical variate pair.
+
+---
+
+## Load Libraries
+- **CCA**: Fit CCA (`cc()`), compute structure correlations (`comput()`).
+- **yacca**: Alternative CCA implementation with different summaries.
+- **ggplot2**: Visualization.
+- **dplyr**: Data manipulation.
+- **CCP**: Significance tests for canonical correlations.
+
+```{r}
+# Install (only run once)
+# install.packages(c("CCA", "yacca", "ggplot2", "dplyr", "CCP"))
+
+library(CCA)      # Main functions: cc(), comput()
+library(yacca)    # Alternative CCA implementation
+library(ggplot2)  # Plotting
+library(dplyr)    # Data wrangling
+library(CCP)      # Significance testing
