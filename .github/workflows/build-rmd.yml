@@ -9,7 +9,7 @@ jobs:
   render:
     runs-on: ubuntu-latest
     permissions:
-      contents: write   # cho phép commit ngược về repo
+      contents: write
 
     steps:
       - uses: actions/checkout@v4
@@ -22,21 +22,61 @@ jobs:
 
       - uses: r-lib/actions/setup-pandoc@v2
 
-      - name: Install packages
+      - name: Install R packages (minimal, stable)
         run: |
           Rscript -e 'install.packages(c(
-            "rmarkdown","MASS","FactoMineR","factoextra",
-            "nnet","tidymodels","ranger","xgboost","e1071"
+            "rmarkdown","knitr","prettydoc",
+            "MASS","FactoMineR","factoextra",
+            "nnet","e1071",
+            "tidymodels","ranger"
           ))'
+
+      - name: Ensure docs/ + theme + landing (if missing)
+        shell: bash
+        run: |
+          mkdir -p docs
+          if [ ! -f docs/_config.yml ]; then
+            cat > docs/_config.yml <<'YAML'
+          title: Multivariate Analysis by R
+          description: Showcase of multivariate methods generated from R notebooks
+          remote_theme: pages-themes/cayman@v0.2.0
+          plugins:
+            - jekyll-remote-theme
+          markdown: kramdown
+          YAML
+          fi
+          if [ ! -f docs/index.md ]; then
+            cat > docs/index.md <<'MD'
+          ---
+          layout: default
+          ---
+          # Multivariate Analysis by R
+          Welcome! Choose a method from the list below.
+          MD
+          fi
 
       - name: Render ALL .Rmd into docs/
         run: |
-          Rscript -e 'dir.create("docs", showWarnings = FALSE);
-                      rmds <- list.files(pattern="\\.Rmd$", ignore.case=TRUE);
-                      for (f in rmds) {
-                        out <- file.path("docs", sub("\\\\.Rmd$", ".html", f, ignore.case=TRUE));
-                        rmarkdown::render(f, output_format = "html_document", output_file = out, envir = new.env());
-                      }'
+          Rscript -e '
+            dir.create("docs", showWarnings = FALSE)
+            rmds <- list.files(pattern="\\.Rmd$", ignore.case=TRUE)
+            if (length(rmds) == 0) { message("No .Rmd files found at repo root."); quit(status=0) }
+            for (f in rmds) {
+              out <- file.path("docs", sub("\\\\.Rmd$", ".html", f, ignore.case=TRUE))
+              message("Rendering: ", f, " -> ", out)
+              tryCatch(
+                rmarkdown::render(f,
+                  output_format = "prettydoc::html_pretty",
+                  output_file   = out,
+                  envir = new.env()
+                ),
+                error = function(e) { message("FAILED: ", f, " :: ", e$message); quit(status=1) }
+              )
+            }
+          '
+
+      - name: List docs/
+        run: ls -lah docs || true
 
       - name: Commit docs/
         run: |
