@@ -1,0 +1,108 @@
+# Core PCA:
+# - stats::prcomp (base R) → fast, stable, standard; no install needed.
+
+# Helpful add‑ons:
+install.packages(c("factoextra", "FactoMineR", "ggplot2", "psych"))
+
+library(ggplot2)     # general plotting
+library(factoextra)  # quick PCA visuals: scree, biplot, loadings, contributions
+library(FactoMineR)  # alternative PCA() with rich outputs; good for mixed workflows
+library(psych)       # KMO/Bartlett checks, correlation diagnostics
+# Example dataset: USArrests (all numeric; different scales)
+data("USArrests")
+df <- na.omit(USArrests)
+
+# Always standardize when variables are on different scales
+# prcomp(scale. = TRUE) standardizes columns to mean 0, sd 1
+pca <- prcomp(df, center = TRUE, scale. = TRUE)
+
+summary(pca)      # variance explained (Std dev, Proportion, Cumulative)
+pca$rotation      # loadings (eigenvectors): variables → PCs
+head(pca$x)       # scores: observations’ coordinates in PC space
+# Scree plot (eigenvalues)
+fviz_eig(pca, addlabels = TRUE, barfill = "gray70", barcolor = "gray30")
+
+# Variable loadings plot (PC1 vs PC2)
+fviz_pca_var(pca, col.var = "contrib") + 
+  ggtitle("Variables on PCs (colored by contribution)")
+
+# Observation scores plot (PC1 vs PC2)
+fviz_pca_ind(pca, geom.ind = "point", pointshape = 21, fill.ind = "gray80") +
+  ggtitle("Observations (scores) on PCs")
+fviz_pca_biplot(
+  pca,
+  repel = TRUE,               # less label overlap
+  geom.ind = "point",
+  pointshape = 21,
+  fill.ind = "gray85",
+  col.var = "steelblue"
+)
+# 1) Cumulative variance rule (e.g., keep PCs until ≥ 85%)
+sv <- summary(pca)$importance["Cumulative Proportion", ]
+which(sv >= 0.85)[1]
+
+# 2) Scree elbow: visual from fviz_eig().
+
+# 3) Kaiser rule (eigenvalue > 1) only if using correlation matrix & standardized data.
+#    Eigenvalues from prcomp: square of sdev
+eigvals <- pca$sdev^2
+which(eigvals > 1)
+# KMO (overall > 0.6 is OK; > 0.8 is great)
+KMO(cor(df))
+
+# Bartlett’s test of sphericity (p < 0.05 suggests correlations exist → PCA meaningful)
+cortest.bartlett(cor(df), n = nrow(df))
+# Variable contribution (%) of PC1/PC2
+fviz_contrib(pca, choice = "var", axes = 1)  # contributions to PC1
+fviz_contrib(pca, choice = "var", axes = 2)  # contributions to PC2
+
+# Get a tidy table of top contributors for PC1
+contrib1 <- factoextra::get_pca_var(pca)$contrib[, 1, drop = FALSE]
+sort(contrib1[,1], decreasing = TRUE)
+K <- 2  # number of PCs to keep (set by your selection)
+scores  <- pca$x[, 1:K, drop = FALSE]
+loadings <- pca$rotation[, 1:K, drop = FALSE]
+
+# Back-transform (approximate original standardized data):
+X_approx_scaled <- scores %*% t(loadings)
+
+# Re-scale back to original units
+mu <- attr(pca$center, "names") # names only; get means via pca$center
+X_approx <- scale(X_approx_scaled, center = -pca$center / pca$scale, scale = 1/pca$scale)
+
+# Compare original vs reconstructed (roughly)
+head(df); head(X_approx)
+# FactoMineR expects a data frame of numerics
+res.pca <- FactoMineR::PCA(df, scale.unit = TRUE, graph = FALSE)
+
+# Eigenvalues & variance
+res.pca$eig
+
+# Coordinates (scores) of individuals & variables
+head(res.pca$ind$coord)
+head(res.pca$var$coord)
+
+# Visuals via factoextra
+fviz_eig(res.pca, addlabels = TRUE)
+fviz_pca_biplot(res.pca, repel = TRUE)
+library(factoextra); library(psych)
+
+data("USArrests")
+df <- na.omit(USArrests)
+
+# Fit PCA (standardized)
+pca <- prcomp(df, center = TRUE, scale. = TRUE)
+
+# Variance explained
+print(summary(pca))
+
+# Scree & biplot
+fviz_eig(pca, addlabels = TRUE)
+fviz_pca_biplot(pca, repel = TRUE)
+
+# Suitability checks
+print(KMO(cor(df)))
+print(cortest.bartlett(cor(df), n = nrow(df)))
+
+# Contributions to PC1
+fviz_contrib(pca, choice = "var", axes = 1)
