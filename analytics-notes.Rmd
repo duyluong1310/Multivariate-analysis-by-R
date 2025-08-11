@@ -1,0 +1,13 @@
+---
+title: "R for Statistical Learning — Notes & Mini-Recipes"
+author: "Luong Bao Duy"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    number_sections: true
+    code_folding: show
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(comment = "#>", dpi = 96, fig.retina = 2, message = FALSE, warning = FALSE)
