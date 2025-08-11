@@ -1,0 +1,97 @@
+install.packages(c("randomForest", "gbm", "caret", "xgboost", "ggplot2"))
+
+library(randomForest) # Classic Random Forest (classification/regression)
+library(gbm)          # Gradient Boosting Machine (classification/regression)
+library(caret)        # Train/test split, cross-validation, metrics
+library(xgboost)      # High-performance gradient boosting
+library(ggplot2)      # Visualization
+set.seed(123)
+data(iris)
+
+# Train/test split
+idx <- createDataPartition(iris$Species, p = 0.7, list = FALSE)
+train <- iris[idx, ]
+test  <- iris[-idx, ]
+# Fit RF
+rf_mod <- randomForest(Species ~ ., data = train,
+                       ntree = 500,        # number of trees
+                       mtry = 2,           # features per split
+                       importance = TRUE)  # compute feature importance
+
+print(rf_mod)
+
+# Predict
+rf_pred <- predict(rf_mod, newdata = test)
+confusionMatrix(rf_pred, test$Species)
+
+# Feature importance
+importance(rf_mod)
+varImpPlot(rf_mod, main = "Random Forest Variable Importance")
+# GBM needs numeric target for classification — encode Species as numeric
+train$Species_num <- as.numeric(train$Species) - 1
+test$Species_num  <- as.numeric(test$Species) - 1
+
+gbm_mod <- gbm(Species_num ~ Sepal.Length + Sepal.Width + Petal.Length + Petal.Width,
+               data = train,
+               distribution = "multinomial",  # "bernoulli" for binary classification
+               n.trees = 1000,
+               interaction.depth = 3,
+               shrinkage = 0.01,
+               n.minobsinnode = 5,
+               cv.folds = 5,
+               verbose = FALSE)
+
+# Best number of trees
+best_trees <- gbm.perf(gbm_mod, method = "cv")
+
+# Predict (probabilities)
+gbm_probs <- predict(gbm_mod, newdata = test, n.trees = best_trees, type = "response")
+
+# Convert to predicted class
+gbm_pred <- factor(apply(gbm_probs, 1, which.max),
+                   labels = levels(train$Species))
+confusionMatrix(gbm_pred, test$Species)
+
+# Variable importance
+summary(gbm_mod, n.trees = best_trees)
+library(xgboost)
+
+# Prepare data as matrices
+X_train <- as.matrix(train[, 1:4])
+y_train <- as.numeric(train$Species) - 1
+X_test  <- as.matrix(test[, 1:4])
+y_test  <- as.numeric(test$Species) - 1
+
+dtrain <- xgb.DMatrix(data = X_train, label = y_train)
+dtest  <- xgb.DMatrix(data = X_test, label = y_test)
+
+params <- list(
+  objective = "multi:softprob", # probability for multiclass
+  num_class = 3,
+  eval_metric = "mlogloss",
+  eta = 0.1,          # learning rate
+  max_depth = 3
+)
+
+xgb_mod <- xgb.train(params = params,
+                     data = dtrain,
+                     nrounds = 200,
+                     watchlist = list(train = dtrain, test = dtest),
+                     verbose = 0)
+
+# Predict
+xgb_probs <- predict(xgb_mod, X_test)
+xgb_pred <- max.col(matrix(xgb_probs, ncol = 3, byrow = TRUE)) - 1
+confusionMatrix(factor(xgb_pred, labels = levels(train$Species)),
+                test$Species)
+ctrl <- trainControl(method = "cv", number = 5)
+
+set.seed(123)
+rf_caret <- train(Species ~ ., data = train, method = "rf",
+                  trControl = ctrl, tuneLength = 3)
+
+gbm_caret <- train(Species ~ ., data = train, method = "gbm",
+                   trControl = ctrl, tuneLength = 3, verbose = FALSE)
+
+rf_caret
+gbm_caret
