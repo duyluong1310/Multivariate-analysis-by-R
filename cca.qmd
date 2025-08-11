@@ -35,3 +35,30 @@ library(yacca)    # Alternative CCA implementation
 library(ggplot2)  # Plotting
 library(dplyr)    # Data wrangling
 library(CCP)      # Significance testing
+cca_mod <- cc(X, Y)
+
+# Canonical correlations
+cca_mod$cor
+data(mtcars)
+
+X <- mtcars[, c("mpg", "hp", "wt")]
+Y <- mtcars[, c("drat", "qsec", "gear")]
+cc_results <- comput(X, Y, cca_mod)
+
+# X variables
+cc_results$xstructcorr
+
+# Y variables
+cc_results$ystructcorr
+yacca_mod <- yacca::cca(X, Y)
+print(yacca_mod)
+p.asym(cca_mod$cor, nrow(X), ncol(X), ncol(Y), tstat = "Wilks")
+u <- as.matrix(scale(X)) %*% cca_mod$xcoef[, 1]
+v <- as.matrix(scale(Y)) %*% cca_mod$ycoef[, 1]
+
+plot(u, v,
+     xlab = "Canonical Variate 1 (X set)",
+     ylab = "Canonical Variate 1 (Y set)",
+     main = sprintf("First Canonical Correlation = %.3f", cca_mod$cor[1]),
+     pch = 19, col = "blue")
+abline(lm(v ~ u), col = "red", lwd = 2)
