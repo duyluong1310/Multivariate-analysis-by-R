@@ -1,0 +1,123 @@
+install.packages(c("e1071", "kernlab", "caret", "pROC", "ggplot2"))
+
+library(e1071)   # Classic SVM (C-SVC, nu-SVC, eps-SVR); simple, reliable
+library(kernlab) # Alternative SVM/KSVM (nice kernels, e.g., "rbfdot", "laplacedot")
+library(caret)   # Train/test split, cross-validation, unified tuning
+library(pROC)    # ROC/AUC for binary classification
+library(ggplot2) # Decision boundary & result plots
+set.seed(123)
+data(iris)
+
+# Binary example for ROC (versus “setosa” or “not setosa”)
+df <- iris
+df$IsSetosa <- factor(ifelse(df$Species == "setosa", "yes", "no"))
+
+idx  <- caret::createDataPartition(df$IsSetosa, p = 0.7, list = FALSE)
+train <- df[idx, ]
+test  <- df[-idx, ]
+
+# Scale numeric predictors (SVM benefits from scaling)
+num_cols <- sapply(train, is.numeric)
+preproc <- caret::preProcess(train[, num_cols], method = c("center", "scale"))
+train[, num_cols] <- predict(preproc, train[, num_cols])
+test[,  num_cols] <- predict(preproc,  test[,  num_cols])
+# Radial Basis Function (RBF) kernel is a strong default
+svm_rbf <- e1071::svm(
+  IsSetosa ~ Sepal.Length + Sepal.Width + Petal.Length + Petal.Width,
+  data = train,
+  kernel = "radial",      # "linear", "polynomial", "sigmoid" also available
+  cost = 1,               # C (regularization)
+  gamma = 0.1,            # RBF kernel width; tune this!
+  probability = TRUE
+)
+
+# Predict
+pred_cls <- predict(svm_rbf, newdata = test, probability = TRUE)
+caret::confusionMatrix(pred_cls, test$IsSetosa)
+
+# ROC/AUC (needs class probabilities)
+probs <- attr(pred_cls, "probabilities")[, "yes"]
+roc_obj <- pROC::roc(response = test$IsSetosa, predictor = probs, levels = c("no", "yes"))
+pROC::auc(roc_obj)
+ctrl <- trainControl(method = "cv", number = 5, classProbs = TRUE, summaryFunction = twoClassSummary)
+
+# RBF SVM (tune C and sigma). In caret, "svmRadial" uses sigma (1/(2*gamma))
+set.seed(123)
+grid <- expand.grid(C = 2^(-1:3), sigma = 2^(-6:-2))
+
+svm_cv <- caret::train(
+  IsSetosa ~ Sepal.Length + Sepal.Width + Petal.Length + Petal.Width,
+  data = train,
+  method = "svmRadial",
+  metric = "ROC",
+  trControl = ctrl,
+  tuneGrid = grid
+)
+
+svm_cv$bestTune
+pred_cv <- predict(svm_cv, newdata = test)
+caret::confusionMatrix(pred_cv, test$IsSetosa)
+ksvm_rbf <- kernlab::ksvm(
+  IsSetosa ~ Sepal.Length + Sepal.Width + Petal.Length + Petal.Width,
+  data = train,
+  kernel = "rbfdot",   # rbfdot, vanilladot (linear), polydot, laplacedot…
+  C = 1,               # cost
+  kpar = list(sigma = 0.1),  # kernel parameter (≈ 1/(2*gamma) convention differs)
+  prob.model = TRUE
+)
+
+pred_k <- predict(ksvm_rbf, newdata = test, type = "response")
+caret::confusionMatrix(pred_k, test$IsSetosa)
+# Use two features for a 2D boundary plot
+train2 <- train[, c("Petal.Length", "Petal.Width", "IsSetosa")]
+test2  <- test[,  c("Petal.Length", "Petal.Width", "IsSetosa")]
+
+svm2 <- e1071::svm(IsSetosa ~ Petal.Length + Petal.Width,
+                   data = train2, kernel = "radial", cost = 1, gamma = 0.5)
+
+# Grid for decision surface
+x1 <- seq(min(train2$Petal.Length), max(train2$Petal.Length), length = 200)
+x2 <- seq(min(train2$Petal.Width ), max(train2$Petal.Width ),  length = 200)
+grid <- expand.grid(Petal.Length = x1, Petal.Width = x2)
+grid$cls <- predict(svm2, newdata = grid)
+
+ggplot() +
+  geom_raster(data = grid, aes(Petal.Length, Petal.Width, fill = cls), alpha = 0.25) +
+  geom_point(data = train2, aes(Petal.Length, Petal.Width, color_
+# Regression example: predict Sepal.Length from other features
+set.seed(42)
+df_reg <- iris[, 1:4]
+idxr <- createDataPartition(df_reg$Sepal.Length, p = 0.7, list = FALSE)
+trainr <- df_reg[idxr, ]; testr <- df_reg[-idxr, ]
+
+# Scale
+numr <- sapply(trainr, is.numeric)
+pp <- preProcess(trainr[, numr], method = c("center", "scale"))
+trainr[, numr] <- predict(pp, trainr[, numr])
+testr[,  numr] <- predict(pp, testr[,  numr])
+
+# epsilon-SVR with RBF kernel
+svr <- e1071::svm(Sepal.Length ~ ., data = trainr,
+                  type = "eps-regression",
+                  kernel = "radial",
+                  cost = 10, gamma = 0.1, epsilon = 0.1)
+
+pred_y <- predict(svr, newdata = testr)
+postResample(pred = pred_y, obs = testr$Sepal.Length)  # RMSE, R^2, MAE
+# Example: weight the positive class more
+w <- c(no = 1, yes = 3)  # adjust ratios as needed
+svm_w <- e1071::svm(IsSetosa ~ ., data = train,
+                    kernel = "radial", cost = 1, gamma = 0.1,
+                    class.weights = w, probability = TRUE)
+pred_w <- predict(svm_w, newdata = test)
+caret::confusionMatrix(pred_w, test$IsSetosa)
+set.seed(123)
+ctrl <- trainControl(method = "cv", number = 5, classProbs = TRUE, summaryFunction = twoClassSummary)
+
+models <- list(
+  lin  = caret::train(IsSetosa ~ ., data = train, method = "svmLinear",  trControl = ctrl, metric = "ROC"),
+  rbf  = caret::train(IsSetosa ~ ., data = train, method = "svmRadial",  trControl = ctrl, metric = "ROC"),
+  poly = caret::train(IsSetosa ~ ., data = train, method = "svmPoly",    trControl = ctrl, metric = "ROC")
+)
+
+lapply(models, function(m) m$results[which.max(m$results$ROC), c("ROC","Sens","Spec","Accuracy")])
