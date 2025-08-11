@@ -1,0 +1,21 @@
+
+---
+
+### 4. `manova.Rmd`
+```markdown
+---
+title: "MANOVA"
+output:
+  prettydoc::html_pretty:
+    theme: cayman
+    highlight: github
+---
+
+```{r}
+fit <- manova(cbind(Sepal.Length, Sepal.Width, Petal.Length, Petal.Width) ~ Species, data=iris)
+summary(fit, test="Pillai")
+library(MASS)
+data(housing)
+housing$Sat <- ordered(housing$Sat, levels=c("Low","Medium","High"))
+ord <- polr(Sat ~ Infl + Type + Cont, data=housing, Hess=TRUE)
+summary(ord)
