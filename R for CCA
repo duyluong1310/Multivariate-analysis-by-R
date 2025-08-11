@@ -1,0 +1,68 @@
+install.packages(c("CCA", "yacca", "ggplot2", "dplyr"))
+library(CCA)      # Main functions: cc(), comput() for canonical correlations
+library(yacca)    # Alternative: canonical.cor(), more print options
+library(ggplot2)  # Visualizations
+library(dplyr)    # Data wrangling
+data(mtcars)
+
+X <- mtcars[, c("mpg", "hp", "wt")]
+Y <- mtcars[, c("drat", "qsec", "gear")]
+# Run CCA
+cca_mod <- cc(X, Y)
+
+# Canonical correlations
+cca_mod$cor
+# Compute loadings (correlation between variables and canonical variates)
+cc_results <- comput(X, Y, cca_mod)
+
+# Canonical loadings for X variables
+cc_results$xstructcorr
+
+# Canonical loadings for Y variables
+cc_results$ystructcorr
+library(yacca)
+yacca_mod <- cca(X, Y)  # note: yacca's cca() is different from CCA's cc()
+print(yacca_mod)
+# Compute canonical variates (scores)
+u <- as.matrix(scale(X)) %*% cca_mod$xcoef[, 1]
+v <- as.matrix(scale(Y)) %*% cca_mod$ycoef[, 1]
+
+plot(u, v,
+     xlab = "Canonical Variate 1 (X set)",
+     ylab = "Canonical Variate 1 (Y set)",
+     main = sprintf("First Canonical Correlation = %.3f", cca_mod$cor[1]))
+abline(lm(v ~ u), col = "red")
+install.packages("CCP")
+library(CCP)
+
+# Wilks' Lambda significance test
+p.asym(cca_mod$cor, nrow(X), ncol(X), ncol(Y), tstat = "Wilks")
+library(CCA)
+library(CCP)
+library(ggplot2)
+
+# Data
+X <- mtcars[, c("mpg", "hp", "wt")]
+Y <- mtcars[, c("drat", "qsec", "gear")]
+
+# Fit CCA
+cca_mod <- cc(X, Y)
+
+# Canonical correlations
+cca_mod$cor
+
+# Loadings
+cc_results <- comput(X, Y, cca_mod)
+cc_results$xstructcorr
+cc_results$ystructcorr
+
+# Significance test
+p.asym(cca_mod$cor, nrow(X), ncol(X), ncol(Y), tstat = "Wilks")
+
+# Plot first canonical variate pair
+u <- as.matrix(scale(X)) %*% cca_mod$xcoef[, 1]
+v <- as.matrix(scale(Y)) %*% cca_mod$ycoef[, 1]
+plot(u, v, xlab = "CV1 (X)", ylab = "CV1 (Y)",
+     main = sprintf("First Canonical Correlation = %.3f", cca_mod$cor[1]),
+     pch = 19, col = "blue")
+abline(lm(v ~ u), col = "red", lwd = 2)
