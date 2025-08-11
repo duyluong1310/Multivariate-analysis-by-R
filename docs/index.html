@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>R Tutorials</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/r.min.js"></script>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    ul { list-style: none; padding: 0; }
+    li { margin: 5px 0; cursor: pointer; color: blue; text-decoration: underline; }
+    pre { background: #f0f0f0; padding: 10px; overflow-x: auto; }
+  </style>
+</head>
+<body>
+  <h1>Danh sách bài R</h1>
+  <ul id="file-list"></ul>
+  <pre><code id="code-display" class="r"></code></pre>
+
+  <script>
+    const files = [
+      "R for Canonical Corelation Analysis (CCA).R",
+      "R for Cluster Analysis.R",
+      "R for Discriminant Analysis.R",
+      "R for Factor Analysis of Mixed Data (FAMD).R",
+      "R for Logistic Regression.R",
+      "R for Multidimensional Scaling (MDS).R",
+      "R for Multinomial or Ordinal Logistic Regression.R",
+      "R for Multiple Regression.R",
+      "R for Multivariate Analysis of Variance (MANOVA).R",
+      "R for Principle Compenent Analysis (PCA).R",
+      "R for Random Forest or Gradient Boosting.R",
+      "R for Support Vector Machines (SVM).R"
+    ];
+
+    const repoOwner = "ten_tai_khoan_github"; // đổi
+    const repoName = "ten_repo"; // đổi
+    const branch = "main";
+
+    const fileList = document.getElementById("file-list");
+    const codeDisplay = document.getElementById("code-display");
+
+    files.forEach(file => {
+      const li = document.createElement("li");
+      li.textContent = file;
+      li.onclick = () => {
+        fetch(`https://raw.githubusercontent.com/${repoOwner}/${repoName}/${branch}/${file}`)
+          .then(res => res.text())
+          .then(code => {
+            codeDisplay.textContent = code;
+            hljs.highlightElement(codeDisplay);
+          });
+      };
+      fileList.appendChild(li);
+    });
+  </script>
+</body>
+</html>
