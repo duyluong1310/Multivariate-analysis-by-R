@@ -1,0 +1,17 @@
+
+---
+
+### 7. `famd.Rmd`
+```markdown
+---
+title: "Factor Analysis of Mixed Data (FAMD)"
+output:
+  prettydoc::html_pretty:
+    theme: cayman
+    highlight: github
+---
+
+```{r}
+library(FactoMineR)
+res <- FAMD(iris, graph=FALSE)
+res$eig[1:5,]
