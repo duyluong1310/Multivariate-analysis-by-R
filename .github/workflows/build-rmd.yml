@@ -55,13 +55,24 @@ jobs:
           MD
           fi
 
-      - name: Render ALL .Rmd (at repo root) into docs/
+      - name: Debug – list *.Rmd in repo
+        run: |
+          echo "Root files:" && ls -la
+          echo
+          echo "Search for *.Rmd (case-insensitive) up to 3 levels:"
+          find . -maxdepth 3 -type f \( -iname "*.rmd" -o -iname "*.RMD" \) -print || true
+
+      - name: Render ALL .Rmd (recursive) into docs/
         run: |
           Rscript -e '
             dir.create("docs", showWarnings = FALSE)
-            rmd_files <- list.files(".", pattern = "\\\\.Rmd$", full.names = TRUE)
-            if (length(rmd_files) == 0) stop("No .Rmd files found in repo root")
-            for (f in rmd_files) {
+            # Common folders to search + recursive search
+            roots <- c(".", "rmd", "notebooks", "analysis", "src")
+            rmds <- unique(unlist(lapply(roots, function(p)
+              if (dir.exists(p)) list.files(p, pattern = "\\\\.[Rr]md$", full.names = TRUE, recursive = TRUE) else character(0)
+            )))
+            if (length(rmds) == 0) stop("No .Rmd files found anywhere (tried ., rmd, notebooks, analysis, src)")
+            for (f in rmds) {
               out <- file.path("docs", paste0(tools::file_path_sans_ext(basename(f)), ".html"))
               message("Rendering: ", f, " -> ", out)
               tryCatch(
@@ -79,8 +90,7 @@ jobs:
       - name: Show docs/
         run: ls -lah docs || true
 
-      # Force-add phòng trường hợp còn rule ignore nào sót
-      - name: Commit docs/
+      - name: Commit docs/ (force-add)
         run: |
           git config user.name "${{ github.actor }}"
           git config user.email "${{ github.actor }}@users.noreply.github.com"
