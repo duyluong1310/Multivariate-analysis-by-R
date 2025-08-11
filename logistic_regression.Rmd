@@ -1,0 +1,12 @@
+
+### 4.2 `logistic_regression.Rmd`
+```markdown
+---
+title: "Logistic Regression"
+output: {prettydoc::html_pretty: {theme: cayman, highlight: github}}
+---
+
+```{r}
+fit <- glm(am ~ mpg + wt + hp, data = mtcars, family = binomial)
+summary(fit)
+head(plogis(predict(fit)))
