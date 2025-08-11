@@ -1,0 +1,68 @@
+install.packages(c("FactoMineR", "factoextra", "dplyr", "ggplot2"))
+
+library(FactoMineR)  # FAMD() function
+library(factoextra)  # Visualization: fviz_famd_*()
+library(dplyr)       # Data manipulation
+library(ggplot2)     # Extra plotting flexibility
+df <- iris %>%
+  mutate(Size = ifelse(Sepal.Length > 5.5, "Large", "Small")) %>%  # categorical
+  select(Sepal.Length, Sepal.Width, Size, Species)  # mix of numeric & categorical
+
+str(df)
+# Run FAMD
+res.famd <- FAMD(df, graph = FALSE)
+
+# Summary
+summary(res.famd)
+# Scree plot
+fviz_screeplot(res.famd, addlabels = TRUE)
+# Individuals (observations)
+fviz_famd_ind(res.famd,
+              repel = TRUE,    # avoid text overlap
+              habillage = "Species", # color by group
+              palette = "jco")
+
+# Variables (numeric & categorical)
+fviz_famd_var(res.famd, repel = TRUE)
+fviz_famd_biplot(res.famd,
+                 repel = TRUE,
+                 habillage = "Species",
+                 palette = "jco")
+# Variable contributions to Dimension 1
+fviz_contrib(res.famd, choice = "var", axes = 1)
+
+# Variable contributions to Dimension 2
+fviz_contrib(res.famd, choice = "var", axes = 2)
+# Eigenvalues
+res.famd$eig
+
+# Coordinates of individuals
+head(res.famd$ind$coord)
+
+# Coordinates of variables
+head(res.famd$var$coord)
+library(FactoMineR)
+library(factoextra)
+library(dplyr)
+
+# Prepare dataset
+df <- iris %>%
+  mutate(Size = ifelse(Sepal.Length > 5.5, "Large", "Small")) %>%
+  select(Sepal.Length, Sepal.Width, Size, Species)
+
+# Run FAMD
+res.famd <- FAMD(df, graph = FALSE)
+
+# Scree plot
+fviz_screeplot(res.famd, addlabels = TRUE)
+
+# Individuals & variables
+fviz_famd_ind(res.famd, repel = TRUE, habillage = "Species", palette = "jco")
+fviz_famd_var(res.famd, repel = TRUE)
+
+# Combined biplot
+fviz_famd_biplot(res.famd, repel = TRUE, habillage = "Species", palette = "jco")
+
+# Contributions
+fviz_contrib(res.famd, choice = "var", axes = 1)
+fviz_contrib(res.famd, choice = "var", axes = 2)
