@@ -1,0 +1,51 @@
+name: Build Pages (R -> HTML)
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - "**.Rmd"
+      - "**.R"
+      - ".github/workflows/build-pages.yml"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up R
+        uses: r-lib/actions/setup-r@v2
+
+      - name: Install rmarkdown/knitr
+        run: |
+          Rscript -e 'install.packages(c("rmarkdown","knitr"), repos="https://cloud.r-project.org")'
+
+      - name: Render .Rmd -> HTML into docs/
+        run: |
+          mkdir -p docs
+          Rscript -e 'fs <- list.files(".", pattern="\\.Rmd$", recursive=TRUE); dir.create("docs", showWarnings=FALSE); for (f in fs) rmarkdown::render(f, output_dir="docs")'
+
+      - name: Spin .R -> .Rmd -> HTML into docs/
+        run: |
+          Rscript -e 'library(knitr); library(rmarkdown); fs <- list.files(".", pattern="(?<!\\.Rmd)\\.R$", recursive=TRUE, perl=TRUE); for (f in fs) { rmd <- sub("\\\\.R$", ".Rmd", f); knitr::spin(f, knit=FALSE); rmarkdown::render(rmd, output_dir="docs") }'
+
+      - name: Create/Update docs/index.md
+        run: |
+          echo "# Multivariate Analysis by R" > docs/index.md
+          echo "" >> docs/index.md
+          echo "Below are read-only HTML renders of the analyses." >> docs/index.md
+          echo "" >> docs/index.md
+          echo "## Rendered files" >> docs/index.md
+          for f in $(ls docs/*.html | sort); do
+            base=$(basename "$f")
+            name="${base%.html}"
+            echo "- [${name}](./${base})" >> docs/index.md
+          done
+
+      - name: Commit docs
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs
+          git commit -m "Update docs (auto)" || echo "No changes"
+          git push
