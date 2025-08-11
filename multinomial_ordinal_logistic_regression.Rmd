@@ -1,13 +1,12 @@
 library(MASS)
 data(housing)
-housing$Sat <- ordered(housing$Sat, levels=c("Low","Medium","High"))
-ord <- polr(Sat ~ Infl + Type + Cont, data=housing, Hess=TRUE)
+housing$Sat <- ordered(housing$Sat, levels = c("Low","Medium","High"))
+ord <- polr(Sat ~ Infl + Type + Cont, data = housing, Hess = TRUE)
 summary(ord)
-
----
-
-### 3. `multinomial_ordinal_logistic_regression.Rmd`
-```markdown
+library(nnet)
+multi <- multinom(Species ~ Sepal.Length + Petal.Length, data = iris, trace = FALSE)
+summary(multi)
+knitr::opts_chunk$set(comment="#>", message=FALSE, warning=FALSE)
 ---
 title: "Multinomial / Ordinal Logistic Regression"
 output:
@@ -15,8 +14,3 @@ output:
     theme: cayman
     highlight: github
 ---
-
-```{r}
-library(nnet)
-multi <- multinom(Species ~ Sepal.Length + Petal.Length, data = iris, trace = FALSE)
-summary(multi)
