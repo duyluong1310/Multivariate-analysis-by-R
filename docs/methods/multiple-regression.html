@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Multiple Regression — Theory</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+<script>
+  // MathJax for LaTeX
+  window.MathJax = { tex: {inlineMath:[['$', '$'], ['\\(', '\\)']]} };
+</script>
+<script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+<style>
+  :root{--bg:#f6f8fb;--panel:#fff;--text:#1b2430;--muted:#64748b;--brand:#0e7c86;--border:#e6e8ef;--radius:16px;--shadow:0 14px 30px rgba(2,6,23,.08)}
+  *{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+  .wrap{max-width:1100px;margin:0 auto;padding:22px 20px}
+  .crumbs a{text-decoration:none;color:var(--brand)} .crumbs{margin-bottom:12px}
+  .layout{display:grid;grid-template-columns:260px 1fr;gap:20px}
+  @media (max-width: 960px){ .layout{grid-template-columns:1fr} }
+  .toc{position:sticky;top:16px;background:var(--panel);border:1px solid var(--border);border-radius:12px;box-shadow:var(--shadow);padding:14px;height:max-content}
+  .toc h4{margin:0 0 8px 0;font-size:14px} .toc a{display:block;color:#334155;text-decoration:none;font-size:14px;margin:6px 0}
+  .panel{background:var(--panel);border:1px solid var(--border);border-radius:16px;box-shadow:var(--shadow);padding:22px}
+  h1{margin:6px 0 2px 0} .subtitle{color:var(--muted);margin:0 0 16px 0}
+  h2{margin-top:22px} h3{margin-top:16px}
+  .note{background:#f1f5f9;border:1px solid #e2e8f0;padding:12px;border-radius:8px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="crumbs"><a href="../index.html">← Back to Methods</a></div>
+
+  <div class="layout">
+    <!-- TOC -->
+    <nav id="toc" class="toc">
+      <h4>On this page</h4>
+      <!-- JS sẽ tự sinh các link mục lục -->
+    </nav>
+
+    <!-- CONTENT -->
+    <main class="panel" id="content">
+      <h1>Multiple Regression</h1>
+      <p class="subtitle">Mô hình hồi quy tuyến tính bội: ước lượng, giả định, kiểm định và chẩn đoán.</p>
+
+      <h2>1. Mô hình</h2>
+      <p>Mô hình dạng ma trận:</p>
+      <p>$$ \mathbf{y} = \mathbf{X}\beta + \varepsilon,\quad \varepsilon \sim \mathcal{N}(0,\sigma^2 \mathbf{I}) $$</p>
+
+      <h2>2. Ước lượng</h2>
+      <p>Ước lượng OLS: $$ \hat{\beta} = (\mathbf{X}^\top \mathbf{X})^{-1} \mathbf{X}^\top \mathbf{y} $$</p>
+
+      <h2>3. Giả định</h2>
+      <ul>
+        <li>Tuyến tính (Linearity)</li>
+        <li>Độc lập (Independence)</li>
+        <li>Phương sai không đổi (Homoscedasticity)</li>
+        <li>Phân phối chuẩn của sai số (Normality)</li>
+        <li>Không đa cộng tuyến nghiêm trọng (VIF)</li>
+      </ul>
+
+      <h2>4. Kiểm định & Đánh giá</h2>
+      <h3>4.1 Kiểm định F tổng thể</h3>
+      <p>So sánh $R^2$ hoặc dùng ANOVA để kiểm định $H_0:\ \beta_1=\cdots=\beta_p=0$.</p>
+      <h3>4.2 Kiểm định t cho từng hệ số</h3>
+      <p>$$ t_j = \frac{\hat{\beta}_j}{\text{SE}(\hat{\beta}_j)} $$</p>
+      <h3>4.3 Độ phù hợp</h3>
+      <p>$R^2$, $R^2_{adj}$, RMSE; chẩn đoán phần dư: QQ‑plot, Residuals vs Fitted.</p>
+
+      <h2>5. Quy trình thực hành</h2>
+      <ol>
+        <li>Khám phá dữ liệu, biến đổi nếu cần (log/box‑cox).</li>
+        <li>Ước lượng OLS; xem VIF, phần dư.</li>
+        <li>Chọn biến (stepwise/penalty) nếu mục tiêu dự báo.</li>
+        <li>Báo cáo hệ số, CI, kiểm định, chỉ số đánh giá.</li>
+      </ol>
+
+      <h2>6. Ghi chú</h2>
+      <p class="note">Có thể bổ sung link “Code mẫu R” hoặc “Tập dữ liệu” nếu cần, nhưng trang này tập trung lý thuyết.</p>
+
+      <h2>7. Tài liệu tham khảo</h2>
+      <ul>
+        <li>Montgomery, Peck &amp; Vining — <em>Introduction to Linear Regression Analysis</em>.</li>
+        <li>Kutner et al. — <em>Applied Linear Statistical Models</em>.</li>
+      </ul>
+    </main>
+  </div>
+</div>
+
+<script>
+  // Tạo TOC từ h2/h3
+  const toc = document.getElementById('toc');
+  const headings = document.querySelectorAll('#content h2, #content h3');
+  const ul = document.createElement('div');
+  headings.forEach(h=>{
+    const id = h.textContent.toLowerCase().replace(/[^a-z0-9]+/g,'-');
+    h.id = id;
+    const a = document.createElement('a');
+    a.href = '#'+id; a.textContent = h.textContent;
+    if(h.tagName==='H3') a.style.marginLeft='12px';
+    ul.appendChild(a);
+  });
+  toc.appendChild(ul);
+</script>
+</body>
+</html>
