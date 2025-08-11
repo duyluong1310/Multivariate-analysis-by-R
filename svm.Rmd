@@ -1,0 +1,17 @@
+
+---
+
+### 10. `svm.Rmd`
+```markdown
+---
+title: "Support Vector Machines (SVM)"
+output:
+  prettydoc::html_pretty:
+    theme: cayman
+    highlight: github
+---
+
+```{r}
+library(e1071)
+m <- svm(Species ~ ., data=iris, kernel="radial", cost=1, gamma=0.1)
+mean(predict(m, iris) == iris$Species)
