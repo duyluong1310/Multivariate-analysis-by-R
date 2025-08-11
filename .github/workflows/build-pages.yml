@@ -1,64 +1,65 @@
-name: Build Pages (R -> HTML)
+name: Build Pages (R -> Rmd -> HTML)
+
 on:
   push:
-    branches: [ main ]           # chạy mỗi lần bạn push vào main
+    branches: [ main ]
     paths:
       - "**.R"
       - "**.Rmd"
+      - "tools/make_rmds.R"
       - "docs/**"
       - ".github/workflows/build-pages.yml"
-  workflow_dispatch:              # cho phép chạy thủ công
+  workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
 
-      - name: Set up Pandoc
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Pandoc
         uses: r-lib/actions/setup-pandoc@v2
 
-      - name: Set up R
+      - name: Setup R
         uses: r-lib/actions/setup-r@v2
         with:
-          use-public-rspm: true   # cài gói nhanh, ổn định
+          use-public-rspm: true   # cài gói nhanh/stable
 
-      - name: Install R packages needed for rendering & common analyses
+      # Cài gói cần thiết để render + các package phân tích phổ biến trong repo của bạn
+      # Nếu log báo thiếu package, bổ sung vào danh sách này.
+      - name: Install R packages
         run: |
           Rscript -e 'install.packages(c(
-            "rmarkdown","knitr","ggplot2","dplyr","tidyr","readr",
-            "MASS","e1071","FactoMineR","factoextra","psych","cluster","car"
+            "rmarkdown","knitr","fs","stringr","glue",
+            "tidyverse","MASS","e1071","FactoMineR","factoextra",
+            "psych","car","cluster","broom","GGally"
           ), repos="https://cloud.r-project.org")'
 
-      - name: Render all .Rmd to HTML into docs/
+      # Sinh .Rmd cho toàn bộ .R (dựa trên tools/make_rmds.R ở mục số 1)
+      - name: Generate Rmds from .R
+        run: Rscript tools/make_rmds.R
+
+      # Render tất cả .Rmd -> HTML vào thư mục docs/ (nguồn cho GitHub Pages)
+      - name: Render Rmd -> HTML into docs/
         run: |
           Rscript - <<'RS'
           dir.create("docs", showWarnings = FALSE)
           rmds <- list.files(".", pattern="\\.Rmd$", recursive=TRUE)
           for (f in rmds) {
-            message("Rendering Rmd: ", f)
-            rmarkdown::render(f, output_dir="docs", quiet=TRUE)
+            message("Rendering: ", f)
+            rmarkdown::render(
+              f,
+              output_format = rmarkdown::html_document(),
+              output_dir = "docs",
+              quiet = TRUE
+            )
           }
           RS
 
-      - name: Spin .R -> .Rmd -> HTML into docs/ (for R scripts)
-        run: |
-          Rscript - <<'RS'
-          dir.create("docs", showWarnings = FALSE)
-          library(knitr); library(rmarkdown)
-          r_files <- list.files(".", pattern="(?<!\\.Rmd)\\.R$", recursive=TRUE, perl=TRUE)
-          for (f in r_files) {
-            message("Spinning R script: ", f)
-            # tạo .Rmd từ .R (cần có comment #' để có tiêu đề/markdown đẹp)
-            try(knitr::spin(f, knit=FALSE), silent=TRUE)
-            rmd <- sub("\\\\.R$", ".Rmd", f)
-            if (file.exists(rmd)) {
-              rmarkdown::render(rmd, output_dir="docs", quiet=TRUE)
-            }
-          }
-          RS
-
-      - name: Create/Update docs/.nojekyll and docs/index.md
+      # Tạo trang index + tắt Jekyll để phục vụ mọi file HTML tĩnh
+      - name: Write docs/index.md and .nojekyll
         shell: bash
         run: |
           mkdir -p docs
@@ -66,13 +67,12 @@ jobs:
           {
             echo "# Multivariate Analysis by R"
             echo
-            echo "This site shows **read-only** HTML renders auto-generated on each push."
+            echo "Read-only HTML renders (auto-generated on each push)."
             echo
             echo "## Rendered files"
             for f in $(ls docs/*.html 2>/dev/null | sort); do
               base=$(basename "$f")
-              # encode spaces for URLs
-              url="${base// /%20}"
+              url="${base// /%20}"   # mã hoá dấu cách trong URL
               title="${base%.html}"
               echo "- [${title}](./${url})"
             done
