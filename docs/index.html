@@ -5,11 +5,10 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Multivariate Analysis by R</title>
 
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
 
 <style>
   :root{
-    /* Palette cảm hứng VBC: teal điểm nhấn, nền sáng, chữ đậm nét */
     --bg:#f6f8fb;
     --panel:#ffffff;
     --text:#1b2430;
@@ -26,7 +25,6 @@
     margin:0;background:var(--bg);color:var(--text);
     font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
   }
-
   /* HERO */
   .hero{
     background:linear-gradient(180deg,#0f8e96 0%, #0e7c86 100%);
@@ -35,7 +33,6 @@
   .wrap{max-width:1100px;margin:0 auto}
   .hero h1{margin:0 0 10px 0;font-size:38px;letter-spacing:.2px}
   .hero p{margin:0;opacity:.95;max-width:820px;font-size:18px}
-
   /* FILTER BAR */
   .filters{
     margin-top:-26px;
@@ -52,7 +49,6 @@
     width:100%;max-width:260px;padding:10px 12px;border-radius:12px;border:1px solid var(--border);
     background:#fff;color:var(--text);outline:none;
   }
-
   /* GRID */
   .section{padding:26px 20px 46px}
   .grid{
@@ -60,7 +56,6 @@
   }
   @media (max-width: 992px){ .grid{grid-template-columns:repeat(2,1fr)} }
   @media (max-width: 640px){ .grid{grid-template-columns:1fr} .search{margin-left:0} }
-
   .card{
     background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:16px;
     box-shadow:var(--shadow);display:flex;flex-direction:column;gap:10px;
@@ -70,14 +65,15 @@
   .badge{display:inline-block;background:#e9fbfb;color:#086d73;border:1px solid #baf0f0;padding:4px 8px;border-radius:999px;font-size:12px;font-weight:700}
   .title{font-weight:700;font-size:18px;margin:0}
   .desc{color:var(--muted);font-size:14px;margin:0}
-  .cta{
-    margin-top:auto;display:flex;gap:10px;align-items:center;justify-content:flex-end
-  }
+  .cta{margin-top:auto}
   .btn{
-    padding:10px 12px;border-radius:12px;border:1px solid var(--border);background:#fff;color:var(--text);
-    cursor:pointer;text-decoration:none;font-weight:700
+    display:block;
+    width:100%;
+    text-align:center;
+    padding:10px 12px;border-radius:12px;border:1px solid var(--border);
+    background:var(--brand);color:#fff;
+    cursor:pointer;text-decoration:none;font-weight:700;
   }
-  .btn.primary{background:var(--brand);border-color:var(--brand);color:#fff}
   footer{padding:28px 20px;color:var(--muted);text-align:center}
 </style>
 </head>
@@ -131,21 +127,21 @@
     {title:"Discriminant Analysis", cat:"classification", file:"R for Discriminant Analysis.R", desc:"LDA/QDA, giả định và đánh giá."}
   ];
 
-  // ===== RENDER CARDS =====
   const grid = document.getElementById('grid');
   const q = document.getElementById('q');
   const year = document.getElementById('y');
 
   function cardHTML(x){
-    const tag = (x.cat==='dependence')? 'Dependence' : (x.cat==='interdependence')? 'Interdependence' : 'Classification';
+    const tag = (x.cat==='dependence')? 'Dependence' :
+                (x.cat==='interdependence')? 'Interdependence' :
+                'Classification';
     return `
       <article class="card" data-cat="${x.cat}" data-title="${x.title.toLowerCase()}">
         <span class="badge">${tag}</span>
         <h3 class="title">${x.title}</h3>
         <p class="desc">${x.desc || ""}</p>
         <div class="cta">
-          <a class="btn" href="viewer.html?file=${encodeURIComponent(x.file)}">View code</a>
-          <a class="btn primary" href="viewer.html?file=${encodeURIComponent(x.file)}">Open</a>
+          <a class="btn" href="viewer.html?file=${encodeURIComponent(x.file)}">Open</a>
         </div>
       </article>
     `;
