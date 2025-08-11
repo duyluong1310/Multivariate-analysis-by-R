@@ -4,80 +4,110 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Multivariate Analysis by R</title>
-<link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" rel="stylesheet"/>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-okaidia.min.css" rel="stylesheet"/>
 <style>
   body {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
-    margin: 0 auto;
-    max-width: 900px;
-    padding: 2rem;
-    line-height: 1.6;
+    font-family: "Segoe UI", Helvetica, Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background: #f9fafc;
     color: #24292e;
   }
-  h1 {
-    font-size: 2rem;
-    border-bottom: 1px solid #eaecef;
-    padding-bottom: .3rem;
+  header {
+    background: linear-gradient(135deg, #0366d6, #00b4d8);
+    color: white;
+    padding: 2rem 1rem;
+    text-align: center;
+  }
+  header h1 {
+    margin: 0;
+    font-size: 2.2rem;
+  }
+  header p {
+    font-size: 1rem;
+    opacity: 0.9;
+  }
+  main {
+    max-width: 800px;
+    margin: 2rem auto;
+    background: white;
+    padding: 2rem;
+    border-radius: 8px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.05);
   }
   h2 {
-    font-size: 1.5rem;
-    margin-top: 2rem;
+    border-bottom: 2px solid #eaecef;
+    padding-bottom: .3rem;
+    margin-top: 1.5rem;
   }
-  a {
-    color: #0366d6;
+  ul {
+    list-style: none;
+    padding: 0;
+  }
+  ul li {
+    margin: 0.5rem 0;
+  }
+  ul li a {
+    display: block;
+    padding: 0.6rem 1rem;
+    border-radius: 6px;
     text-decoration: none;
+    background: #f1f5f9;
+    color: #0366d6;
+    font-weight: 500;
+    transition: background 0.3s, transform 0.2s;
+    text-align: center;
   }
-  a:hover {
-    text-decoration: underline;
+  ul li a:hover {
+    background: #e2ecf8;
+    transform: translateY(-2px);
   }
   footer {
-    margin-top: 3rem;
-    padding-top: 1rem;
-    border-top: 1px solid #eaecef;
+    text-align: center;
+    padding: 1rem;
     font-size: .85rem;
     color: #6a737d;
+    margin-top: 2rem;
   }
 </style>
 </head>
 <body>
 
-<h1>Multivariate Analysis by R</h1>
-<p>Welcome to the <strong>Multivariate Analysis by R</strong> showcase. All content below is generated from R notebooks and is read-only via GitHub Pages.</p>
+<header>
+  <h1>Multivariate Analysis by R</h1>
+  <p>Showcase of multivariate methods generated from R notebooks</p>
+</header>
 
-<h2>Methods Covered</h2>
+<main>
+  <h2>Methods Covered</h2>
 
-<h3>Dependence Methods</h3>
-<ul>
-  <li><a href="multiple_regression.html">Multiple Regression</a></li>
-  <li><a href="logistic_regression.html">Logistic Regression</a></li>
-  <li><a href="multinomial_logistic.html">Multinomial / Ordinal Logistic Regression</a></li>
-  <li><a href="manova.html">Multivariate Analysis of Variance (MANOVA)</a></li>
-  <li><a href="cca.html">Canonical Correlation Analysis (CCA)</a></li>
-</ul>
+  <h3>Dependence Methods</h3>
+  <ul>
+    <li><a href="multiple_regression.html">Multiple Regression</a></li>
+    <li><a href="logistic_regression.html">Logistic Regression</a></li>
+    <li><a href="multinomial_logistic.html">Multinomial / Ordinal Logistic Regression</a></li>
+    <li><a href="manova.html">Multivariate Analysis of Variance (MANOVA)</a></li>
+    <li><a href="cca.html">Canonical Correlation Analysis (CCA)</a></li>
+  </ul>
 
-<h3>Interdependence Methods</h3>
-<ul>
-  <li><a href="pca.html">Principal Component Analysis (PCA)</a></li>
-  <li><a href="famd.html">Factor Analysis of Mixed Data (FAMD)</a></li>
-  <li><a href="cluster.html">Cluster Analysis</a></li>
-  <li><a href="mds.html">Multidimensional Scaling (MDS)</a></li>
-</ul>
+  <h3>Interdependence Methods</h3>
+  <ul>
+    <li><a href="pca.html">Principal Component Analysis (PCA)</a></li>
+    <li><a href="famd.html">Factor Analysis of Mixed Data (FAMD)</a></li>
+    <li><a href="cluster.html">Cluster Analysis</a></li>
+    <li><a href="mds.html">Multidimensional Scaling (MDS)</a></li>
+  </ul>
 
-<h3>Classification & Prediction</h3>
-<ul>
-  <li><a href="svm.html">Support Vector Machines (SVM)</a></li>
-  <li><a href="random_forest.html">Random Forest / Gradient Boosting</a></li>
-  <li><a href="discriminant.html">Discriminant Analysis</a></li>
-</ul>
-
-<h2>How to Use This Page</h2>
-<ul>
-  <li>Click on any method to view the corresponding analysis in HTML format.</li>
-  <li>The page is updated automatically whenever HTML files are added or overwritten in the <code>docs/</code> folder.</li>
-</ul>
+  <h3>Classification & Prediction</h3>
+  <ul>
+    <li><a href="svm.html">Support Vector Machines (SVM)</a></li>
+    <li><a href="random_forest.html">Random Forest / Gradient Boosting</a></li>
+    <li><a href="discriminant.html">Discriminant Analysis</a></li>
+  </ul>
+</main>
 
 <footer>
-  This site is for viewing only — no edits to source notebooks or code.
+  © 2025 Your Name | Designed for Teaching Purposes
 </footer>
 
 </body>
