@@ -1,72 +1,79 @@
 name: Build Pages (R -> HTML)
-
 on:
   push:
-    branches: [ main ]
+    branches: [ main ]           # chạy mỗi lần bạn push vào main
     paths:
       - "**.R"
       - "**.Rmd"
+      - "docs/**"
       - ".github/workflows/build-pages.yml"
-  workflow_dispatch:
+  workflow_dispatch:              # cho phép chạy thủ công
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      # Pandoc + R để render Rmd -> HTML
       - name: Set up Pandoc
         uses: r-lib/actions/setup-pandoc@v2
 
       - name: Set up R
         uses: r-lib/actions/setup-r@v2
         with:
-          use-public-rspm: true
+          use-public-rspm: true   # cài gói nhanh, ổn định
 
-      - name: Install rmarkdown/knitr
+      - name: Install R packages needed for rendering & common analyses
         run: |
-          Rscript -e 'install.packages(c("rmarkdown","knitr"), repos="https://cloud.r-project.org")'
+          Rscript -e 'install.packages(c(
+            "rmarkdown","knitr","ggplot2","dplyr","tidyr","readr",
+            "MASS","e1071","FactoMineR","factoextra","psych","cluster","car"
+          ), repos="https://cloud.r-project.org")'
 
-      - name: Render all R/Rmd -> HTML into docs/
+      - name: Render all .Rmd to HTML into docs/
+        run: |
+          Rscript - <<'RS'
+          dir.create("docs", showWarnings = FALSE)
+          rmds <- list.files(".", pattern="\\.Rmd$", recursive=TRUE)
+          for (f in rmds) {
+            message("Rendering Rmd: ", f)
+            rmarkdown::render(f, output_dir="docs", quiet=TRUE)
+          }
+          RS
+
+      - name: Spin .R -> .Rmd -> HTML into docs/ (for R scripts)
+        run: |
+          Rscript - <<'RS'
+          dir.create("docs", showWarnings = FALSE)
+          library(knitr); library(rmarkdown)
+          r_files <- list.files(".", pattern="(?<!\\.Rmd)\\.R$", recursive=TRUE, perl=TRUE)
+          for (f in r_files) {
+            message("Spinning R script: ", f)
+            # tạo .Rmd từ .R (cần có comment #' để có tiêu đề/markdown đẹp)
+            try(knitr::spin(f, knit=FALSE), silent=TRUE)
+            rmd <- sub("\\\\.R$", ".Rmd", f)
+            if (file.exists(rmd)) {
+              rmarkdown::render(rmd, output_dir="docs", quiet=TRUE)
+            }
+          }
+          RS
+
+      - name: Create/Update docs/.nojekyll and docs/index.md
         shell: bash
         run: |
           mkdir -p docs
-          # Spin .R -> .Rmd (nếu có)
-          Rscript - <<'RS'
-          suppressMessages({
-            library(knitr); library(rmarkdown)
-            # Spin tất cả .R (nếu dùng chú thích kiểu #' )
-            r_files <- list.files(".", pattern="(?<!\\.Rmd)\\.R$", recursive=TRUE, ignore.case=TRUE, perl=TRUE)
-            for (f in r_files) {
-              try(knitr::spin(f, knit = FALSE), silent = TRUE)
-            }
-            # Render tất cả .Rmd
-            rmds <- list.files(".", pattern="\\.Rmd$", recursive=TRUE, ignore.case=TRUE)
-            dir.create("docs", showWarnings = FALSE)
-            for (f in rmds) {
-              cat("Rendering:", f, "\n")
-              try(rmarkdown::render(f, output_format = rmarkdown::html_document(),
-                                    output_dir = "docs", quiet = TRUE), silent = TRUE)
-            }
-          })
-          RS
-
-      - name: Create/Update docs/index.md (+ .nojekyll)
-        shell: bash
-        run: |
           touch docs/.nojekyll
           {
             echo "# Multivariate Analysis by R"
             echo
-            echo "Below are read‑only HTML renders (auto‑generated on each push)."
+            echo "This site shows **read-only** HTML renders auto-generated on each push."
             echo
             echo "## Rendered files"
             for f in $(ls docs/*.html 2>/dev/null | sort); do
               base=$(basename "$f")
+              # encode spaces for URLs
+              url="${base// /%20}"
               title="${base%.html}"
-              url="${base// /%20}"       # encode spaces for URLs
               echo "- [${title}](./${url})"
             done
           } > docs/index.md
