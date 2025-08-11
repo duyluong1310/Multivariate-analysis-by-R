@@ -1,0 +1,120 @@
+# Base:
+# - stats::kmeans, stats::hclust, stats::dist  (no install needed)
+
+# Helpful add‑ons:
+install.packages(c("factoextra", "cluster", "dbscan", "fpc", "ggplot2"))
+
+library(factoextra)  # Quick, high‑quality visuals: fviz_* and fviz_nbclust
+library(cluster)     # PAM (k‑medoids), silhouette(), daisy() for mixed distances
+library(dbscan)      # DBSCAN & OPTICS (density‑based clustering)
+library(fpc)         # clusterboot() for stability, calinhara for Calinski–Harabasz
+library(ggplot2)     # Extra plotting
+# Example dataset: USArrests (numeric with different scales)
+data("USArrests")
+df <- na.omit(USArrests)
+
+# Always standardize when variables have different units/scales
+X <- scale(df)  # center & scale columns
+# Elbow method (total within-cluster sum of squares)
+fviz_nbclust(X, kmeans, method = "wss")
+
+# Average silhouette method
+fviz_nbclust(X, kmeans, method = "silhouette")
+
+# Gap statistic (slower but principled)
+set.seed(42)
+fviz_nbclust(X, kmeans, method = "gap_stat")
+set.seed(123)
+k <- 3
+km <- kmeans(X, centers = k, nstart = 25)
+
+km$size        # cluster sizes
+km$centers     # standardized centroids
+
+# Visualize clusters in first two principal components
+fviz_cluster(list(data = X, cluster = km$cluster)) +
+  ggtitle("K-means clusters (PC space)")
+# PAM works with any distance; use Euclidean on scaled data here
+pam_fit <- cluster::pam(X, k = 3, stand = FALSE)
+
+# Silhouette plot
+sil <- cluster::silhouette(pam_fit)
+plot(sil, main = "Silhouette — PAM")
+
+fviz_cluster(pam_fit) + ggtitle("PAM clusters (medoids)")
+# Distance and linkage
+D  <- dist(X, method = "euclidean")
+hc <- hclust(D, method = "ward.D2")  # compact spherical clusters
+
+# Dendrogram
+plot(hc, cex = 0.6, main = "Hierarchical clustering dendrogram")
+
+# Cut tree into k clusters
+k <- 3
+grp <- cutree(hc, k = k)
+
+fviz_cluster(list(data = X, cluster = grp)) +
+  ggtitle("Hierarchical (Ward.D2)")
+# Heuristic for eps via kNN distance plot
+kNNdistplot(X, k = 5); abline(h = 1.2, lty = 2)  # adjust after inspecting the elbow
+
+# Fit DBSCAN (tune eps & minPts)
+db <- dbscan::dbscan(X, eps = 1.2, minPts = 5)
+
+table(db$cluster)  # 0 are noise points
+fviz_cluster(list(data = X, cluster = db$cluster)) +
+  ggtitle("DBSCAN clusters (0 = noise)")
+# Silhouette (higher is better; range -1..1)
+sil_km <- cluster::silhouette(km$cluster, dist(X))
+summary(sil_km)
+
+# Calinski–Harabasz index (higher is better)
+fpc::calinhara(X, km$cluster)
+
+# Bootstrap stability (time‑consuming; adjust B)
+set.seed(123)
+stab <- fpc::clusterboot(X, B = 50,
+                         bootmethod = "boot",
+                         clustermethod = disthclustCBI,
+                         method = "ward.D2",
+                         k = 3)
+stab$bootmean  # average Jaccard similarities per cluster
+# PCA projection for visualization only (do not forget: we clustered on X already)
+p <- factoextra::fviz_pca_ind(prcomp(X), geom = "point")
+p + ggtitle("PCA projection (unlabeled)")
+
+# Color by K-means clusters
+km_lab <- factor(km$cluster)
+fviz_pca_ind(prcomp(X), geom = "point",
+             habillage = km_lab, addEllipses = TRUE)
+library(factoextra); library(cluster); library(dbscan); library(fpc)
+
+data("USArrests")
+X <- scale(na.omit(USArrests))
+
+# Pick k
+fviz_nbclust(X, kmeans, method = "wss")
+fviz_nbclust(X, kmeans, method = "silhouette")
+
+# K-means
+set.seed(1)
+km <- kmeans(X, centers = 3, nstart = 25)
+fviz_cluster(list(data = X, cluster = km$cluster))
+
+# PAM (robust)
+pam_fit <- pam(X, k = 3)
+fviz_cluster(pam_fit)
+
+# Hierarchical (Ward)
+hc <- hclust(dist(X), method = "ward.D2")
+grp <- cutree(hc, k = 3)
+fviz_cluster(list(data = X, cluster = grp))
+
+# DBSCAN (tune eps via kNNdistplot)
+kNNdistplot(X, k = 5); abline(h = 1.2, lty = 2)
+db <- dbscan(X, eps = 1.2, minPts = 5)
+fviz_cluster(list(data = X, cluster = db$cluster))
+
+# Validation
+summary(silhouette(km$cluster, dist(X)))
+fpc::calinhara(X, km$cluster)
