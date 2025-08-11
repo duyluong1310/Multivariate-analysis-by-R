@@ -1,0 +1,110 @@
+# Core models
+# - MASS::lda and MASS::qda are the standard LDA/QDA implementations.
+
+# Helpful add‑ons
+install.packages(c("MASS", "caret", "ggplot2", "biotools", "klaR", "tidyr"))
+
+library(MASS)      # lda(), qda()
+library(caret)     # train/test split, confusionMatrix
+library(ggplot2)   # quick visualizations
+library(biotools)  # boxM() for homogeneity of covariance matrices (LDA assumption)
+library(klaR)      # rda() — regularized discriminant analysis (when covariance is ill‑conditioned)
+library(tidyr)     # data reshaping for plots
+set.seed(123)
+data(iris)
+
+# Keep two features for 2D plots; you can keep all four in practice
+df <- iris[, c("Sepal.Length", "Sepal.Width", "Species")]
+
+# Train/test split
+idx <- createDataPartition(df$Species, p = 0.7, list = FALSE)
+train <- df[idx, ]
+test  <- df[-idx, ]
+# Box's M test for equality of covariances (if p-value is small, LDA assumption is violated)
+boxM_result <- biotools::boxM(train[, 1:2], grouping = train$Species)
+boxM_result
+lda_fit <- lda(Species ~ Sepal.Length + Sepal.Width, data = train)
+lda_fit     # shows class means, prior, linear discriminants
+# Class posteriors and predicted class
+lda_pred <- predict(lda_fit, newdata = test)
+
+head(lda_pred$posterior)   # class probabilities
+head(lda_pred$class)       # predicted labels
+
+# Confusion matrix and accuracy
+caret::confusionMatrix(lda_pred$class, test$Species)
+qda_fit <- qda(Species ~ Sepal.Length + Sepal.Width, data = train)
+qda_pred <- predict(qda_fit, newdata = test)
+
+caret::confusionMatrix(qda_pred$class, test$Species)
+rda_fit <- klaR::rda(Species ~ Sepal.Length + Sepal.Width, data = train)
+rda_pred <- predict(rda_fit, newdata = test)$class
+caret::confusionMatrix(rda_pred, test$Species)
+# Leave‑one‑out CV on the training set
+lda_cv <- lda(Species ~ Sepal.Length + Sepal.Width, data = train, CV = TRUE)
+caret::confusionMatrix(lda_cv$class, train$Species)
+# Predict (on train) to get discriminant scores
+lda_train_pred <- predict(lda_fit, newdata = train)
+
+plot_df <- data.frame( LD1 = lda_train_pred$x[,1],
+                       LD2 = if (ncol(lda_train_pred$x) >= 2) lda_train_pred$x[,2] else 0,
+                       Species = train$Species)
+
+ggplot(plot_df, aes(LD1, LD2, color = Species)) +
+  geom_point(size = 3) +
+  labs(title = "LDA: data in discriminant space (LD1 vs LD2)") +
+  theme_minimal()
+# Create a grid over feature space
+x1 <- seq(min(df$Sepal.Length), max(df$Sepal.Length), length = 200)
+x2 <- seq(min(df$Sepal.Width ), max(df$Sepal.Width ), length = 200)
+grid <- expand.grid(Sepal.Length = x1, Sepal.Width = x2)
+
+# LDA regions
+grid$cls_lda <- predict(lda_fit, newdata = grid)$class
+ggplot() +
+  geom_raster(data = grid, aes(Sepal.Length, Sepal.Width, fill = cls_lda), alpha = 0.25) +
+  geom_point(data = train, aes(Sepal.Length, Sepal.Width, color = Species), size = 2) +
+  labs(title = "LDA decision regions") +
+  theme_minimal()
+
+# QDA regions
+grid$cls_qda <- predict(qda_fit, newdata = grid)$class
+ggplot() +
+  geom_raster(data = grid, aes(Sepal.Length, Sepal.Width, fill = cls_qda), alpha = 0.25) +
+  geom_point(data = train, aes(Sepal.Length, Sepal.Width, color = Species), size = 2) +
+  labs(title = "QDA decision regions") +
+  theme_minimal()
+# Refit with all four features (no plotting; performance usually improves)
+train_all <- iris[idx, ]
+test_all  <- iris[-idx, ]
+
+lda_all <- lda(Species ~ ., data = train_all)
+qda_all <- qda(Species ~ ., data = train_all)
+
+cm_lda_all <- confusionMatrix(predict(lda_all, test_all)$class, test_all$Species)
+cm_qda_all <- confusionMatrix(predict(qda_all, test_all)$class, test_all$Species)
+
+cm_lda_all; cm_qda_all
+# Example: scale numeric predictors first (not needed for iris)
+# iris_scaled <- iris; iris_scaled[,1:4] <- scale(iris[,1:4])
+library(MASS); library(caret); library(biotools); library(ggplot2)
+
+set.seed(123)
+data(iris)
+df <- iris[, c("Sepal.Length","Sepal.Width","Species")]
+
+idx <- createDataPartition(df$Species, p = 0.7, list = FALSE)
+train <- df[idx, ]; test <- df[-idx, ]
+
+# Assumption check (LDA)
+print(biotools::boxM(train[,1:2], train$Species))
+
+# LDA
+lda_fit <- lda(Species ~ Sepal.Length + Sepal.Width, data = train)
+lda_pred <- predict(lda_fit, newdata = test)
+print(confusionMatrix(lda_pred$class, test$Species))
+
+# QDA
+qda_fit <- qda(Species ~ Sepal.Length + Sepal.Width, data = train)
+qda_pred <- predict(qda_fit, newdata = test)
+print(confusionMatrix(qda_pred$class, test$Species))
