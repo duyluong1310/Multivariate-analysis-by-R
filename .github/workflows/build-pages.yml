@@ -1,46 +1,75 @@
 name: Build Pages (R -> HTML)
+
 on:
   push:
     branches: [ main ]
     paths:
-      - "**.Rmd"
       - "**.R"
+      - "**.Rmd"
       - ".github/workflows/build-pages.yml"
+  workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # Pandoc + R để render Rmd -> HTML
+      - name: Set up Pandoc
+        uses: r-lib/actions/setup-pandoc@v2
 
       - name: Set up R
         uses: r-lib/actions/setup-r@v2
+        with:
+          use-public-rspm: true
 
       - name: Install rmarkdown/knitr
         run: |
           Rscript -e 'install.packages(c("rmarkdown","knitr"), repos="https://cloud.r-project.org")'
 
-      - name: Render .Rmd -> HTML into docs/
+      - name: Render all R/Rmd -> HTML into docs/
+        shell: bash
         run: |
           mkdir -p docs
-          Rscript -e 'fs <- list.files(".", pattern="\\.Rmd$", recursive=TRUE); dir.create("docs", showWarnings=FALSE); for (f in fs) rmarkdown::render(f, output_dir="docs")'
+          # Spin .R -> .Rmd (nếu có)
+          Rscript - <<'RS'
+          suppressMessages({
+            library(knitr); library(rmarkdown)
+            # Spin tất cả .R (nếu dùng chú thích kiểu #' )
+            r_files <- list.files(".", pattern="(?<!\\.Rmd)\\.R$", recursive=TRUE, ignore.case=TRUE, perl=TRUE)
+            for (f in r_files) {
+              try(knitr::spin(f, knit = FALSE), silent = TRUE)
+            }
+            # Render tất cả .Rmd
+            rmds <- list.files(".", pattern="\\.Rmd$", recursive=TRUE, ignore.case=TRUE)
+            dir.create("docs", showWarnings = FALSE)
+            for (f in rmds) {
+              cat("Rendering:", f, "\n")
+              try(rmarkdown::render(f, output_format = rmarkdown::html_document(),
+                                    output_dir = "docs", quiet = TRUE), silent = TRUE)
+            }
+          })
+          RS
 
-      - name: Spin .R -> .Rmd -> HTML into docs/
+      - name: Create/Update docs/index.md (+ .nojekyll)
+        shell: bash
         run: |
-          Rscript -e 'library(knitr); library(rmarkdown); fs <- list.files(".", pattern="(?<!\\.Rmd)\\.R$", recursive=TRUE, perl=TRUE); for (f in fs) { rmd <- sub("\\\\.R$", ".Rmd", f); knitr::spin(f, knit=FALSE); rmarkdown::render(rmd, output_dir="docs") }'
-
-      - name: Create/Update docs/index.md
-        run: |
-          echo "# Multivariate Analysis by R" > docs/index.md
-          echo "" >> docs/index.md
-          echo "Below are read-only HTML renders of the analyses." >> docs/index.md
-          echo "" >> docs/index.md
-          echo "## Rendered files" >> docs/index.md
-          for f in $(ls docs/*.html | sort); do
-            base=$(basename "$f")
-            name="${base%.html}"
-            echo "- [${name}](./${base})" >> docs/index.md
-          done
+          touch docs/.nojekyll
+          {
+            echo "# Multivariate Analysis by R"
+            echo
+            echo "Below are read‑only HTML renders (auto‑generated on each push)."
+            echo
+            echo "## Rendered files"
+            for f in $(ls docs/*.html 2>/dev/null | sort); do
+              base=$(basename "$f")
+              title="${base%.html}"
+              url="${base// /%20}"       # encode spaces for URLs
+              echo "- [${title}](./${url})"
+            done
+          } > docs/index.md
 
       - name: Commit docs
         run: |
